@@ -281,7 +281,7 @@ function updateMediaSession(song) {
       artwork.push({ src: song.art, sizes: '240x240', type: 'image/jpeg' });
       artwork.push({ src: song.art, sizes: '512x512', type: 'image/jpeg' });
     } else {
-      artwork.push({ src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' });
+      artwork.push({ src: 'assets/icons/neon-h-music-wave-icon.png', sizes: '512x512', type: 'image/png' });
     }
 
     navigator.mediaSession.metadata = new MediaMetadata({

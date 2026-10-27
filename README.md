@@ -164,10 +164,7 @@ music player/
 ├── service-worker.js       # Offline shell caching & service worker lifecycle
 ├── assets/
 │   └── icons/
-│       ├── icon-192.png           # 192x192 PWA launcher icon
-│       ├── icon-512.png           # 512x512 PWA splash icon
-│       ├── icon-maskable-512.png  # Adaptive Android maskable icon
-│       └── favicon.png            # 64x64 browser favicon
+│       └── neon-h-music-wave-icon.png  # Master unified app icon for favicon, PWA, and lockscreen
 ├── LICENSE                 # MIT License
 ├── .gitignore              # Git ignore rules for clean repository
 └── README.md               # Complete documentation and setup guide

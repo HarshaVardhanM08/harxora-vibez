@@ -3,7 +3,7 @@
    Cache-first shell strategy for reliable offline playback
    ================================================================= */
 
-const CACHE_NAME = 'harxora-vibez-v1';
+const CACHE_NAME = 'harxora-vibez-v2';
 
 // Essential shell resources required to boot and run offline
 const SHELL_ASSETS = [
@@ -12,10 +12,7 @@ const SHELL_ASSETS = [
   './style.css',
   './script.js',
   './manifest.json',
-  './assets/icons/icon-192.png',
-  './assets/icons/icon-512.png',
-  './assets/icons/icon-maskable-512.png',
-  './assets/icons/favicon.png'
+  './assets/icons/neon-h-music-wave-icon.png'
 ];
 
 // Installation: pre-cache application shell
@@ -75,9 +72,9 @@ self.addEventListener('fetch', (event) => {
           }
           return networkRes;
         }).catch(() => {
-          // If offline and requesting an image, fallback to favicon if available
+          // If offline and requesting an image, fallback to unified icon if available
           if (req.destination === 'image') {
-            return caches.match('./assets/icons/favicon.png');
+            return caches.match('./assets/icons/neon-h-music-wave-icon.png');
           }
         });
       })
