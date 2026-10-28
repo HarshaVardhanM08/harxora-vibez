@@ -132,6 +132,7 @@ const State = {
   repeat: 'off', // 'off' | 'one' | 'all'
   settings: {
     theme: 'dark',
+    playerStyle: 'glass', // 'glass' | 'immersive' | 'minimal' | 'transparent' | 'dynamic' | 'classic'
     accent: '#7c5cff',
     blur: 30,
     dim: 55,
@@ -149,6 +150,7 @@ const State = {
   sleepTimerId: null,
   sleepEndTs: null,
   blobUrls: new Map(),
+  colorCache: new Map(),
   deferredInstallPrompt: null,
 };
 
@@ -278,7 +280,11 @@ function updateMediaSession(song) {
   try {
     const artwork = [];
     if (song.art) {
-      artwork.push({ src: song.art, sizes: '240x240', type: 'image/jpeg' });
+      artwork.push({ src: song.art, sizes: '96x96', type: 'image/jpeg' });
+      artwork.push({ src: song.art, sizes: '128x128', type: 'image/jpeg' });
+      artwork.push({ src: song.art, sizes: '192x192', type: 'image/jpeg' });
+      artwork.push({ src: song.art, sizes: '256x256', type: 'image/jpeg' });
+      artwork.push({ src: song.art, sizes: '384x384', type: 'image/jpeg' });
       artwork.push({ src: song.art, sizes: '512x512', type: 'image/jpeg' });
     } else {
       artwork.push({ src: 'assets/icons/neon-h-music-wave-icon.png', sizes: '512x512', type: 'image/png' });
@@ -291,21 +297,32 @@ function updateMediaSession(song) {
       artwork,
     });
 
-    // Action handlers
-    navigator.mediaSession.setActionHandler('play', () => audio.play());
-    navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-    navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-    navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (details.seekTime && isFinite(details.seekTime)) audio.currentTime = details.seekTime;
+    navigator.mediaSession.playbackState = State.isPlaying ? 'playing' : 'paused';
+
+    const safeSetAction = (action, handler) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch (e) {}
+    };
+
+    safeSetAction('play', () => audio.play());
+    safeSetAction('pause', () => audio.pause());
+    safeSetAction('previoustrack', () => prevTrack());
+    safeSetAction('nexttrack', () => nextTrack());
+    safeSetAction('seekto', (details) => {
+      if (details.seekTime !== undefined && isFinite(details.seekTime)) audio.currentTime = details.seekTime;
     });
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+    safeSetAction('seekbackward', (details) => {
       const skip = details.seekOffset || 10;
       audio.currentTime = Math.max(0, audio.currentTime - skip);
     });
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+    safeSetAction('seekforward', (details) => {
       const skip = details.seekOffset || 10;
       audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + skip);
+    });
+    safeSetAction('stop', () => {
+      audio.pause();
+      audio.currentTime = 0;
     });
   } catch (e) {
     console.warn('MediaSession update skipped', e);
@@ -857,6 +874,17 @@ function renderAll() {
   updateMini();
 }
 
+function emptyHomeCardHTML(iconSvg, title, subtitle) {
+  return `
+    <div class="empty-section-card">
+      ${iconSvg}
+      <div>
+        <h4>${title}</h4>
+        <p>${subtitle}</p>
+      </div>
+    </div>`;
+}
+
 /* ----- Home Dashboard ----- */
 function renderHome() {
   // Greeting
@@ -879,8 +907,15 @@ function renderHome() {
     .map((id) => State.songs.find((s) => s.id === id))
     .filter(Boolean)
     .slice(0, 12);
-  if (recents.length) recentRow.innerHTML = recents.map((s) => songCardHTML(s)).join('');
-  else recentRow.innerHTML = `<div class="empty-mini">No recent plays yet</div>`;
+  if (recents.length) {
+    recentRow.innerHTML = recents.map((s) => songCardHTML(s)).join('');
+  } else {
+    recentRow.innerHTML = emptyHomeCardHTML(
+      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      'No recent plays yet',
+      'Start playing any song from your library to build your history.'
+    );
+  }
   attachCardClicks(recentRow, 'song');
 
   // Favorites
@@ -889,8 +924,15 @@ function renderHome() {
     .map((id) => State.songs.find((s) => s.id === id))
     .filter(Boolean)
     .slice(0, 12);
-  if (favs.length) favRow.innerHTML = favs.map((s) => songCardHTML(s)).join('');
-  else favRow.innerHTML = `<div class="empty-mini">Tap the heart on any song to add favorites</div>`;
+  if (favs.length) {
+    favRow.innerHTML = favs.map((s) => songCardHTML(s)).join('');
+  } else {
+    favRow.innerHTML = emptyHomeCardHTML(
+      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>',
+      'No favorites saved',
+      'Click the heart icon on any song to save it to your favorites.'
+    );
+  }
   attachCardClicks(favRow, 'song');
 
   // Playlists
@@ -898,15 +940,26 @@ function renderHome() {
   if (State.playlists.length) {
     plRow.innerHTML = State.playlists.slice(0, 12).map((p) => playlistCardHTML(p)).join('');
   } else {
-    plRow.innerHTML = `<div class="empty-mini">Create playlists to organize your library</div>`;
+    plRow.innerHTML = emptyHomeCardHTML(
+      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h10M18 14v7M15 17l3-3 3 3"/></svg>',
+      'No custom playlists',
+      'Create your first playlist to organize songs by mood or genre.'
+    );
   }
   attachCardClicks(plRow, 'playlist');
 
   // Recently Added
   const addedRow = $('#recently-added-row');
   const added = [...State.songs].sort((a, b) => b.addedAt - a.addedAt).slice(0, 12);
-  if (added.length) addedRow.innerHTML = added.map((s) => songCardHTML(s)).join('');
-  else addedRow.innerHTML = `<div class="empty-mini">Recently added music appears here</div>`;
+  if (added.length) {
+    addedRow.innerHTML = added.map((s) => songCardHTML(s)).join('');
+  } else {
+    addedRow.innerHTML = emptyHomeCardHTML(
+      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>',
+      'Library is empty',
+      'Add songs or music folders using the Add Music button to begin.'
+    );
+  }
   attachCardClicks(addedRow, 'song');
 
   // Local Recommendations / Shuffle mix
@@ -915,7 +968,11 @@ function renderHome() {
     const sample = [...State.songs].sort(() => Math.random() - 0.5).slice(0, 12);
     recRow.innerHTML = sample.map((s) => songCardHTML(s)).join('');
   } else {
-    recRow.innerHTML = `<div class="empty-mini">Suggestions appear as you add music</div>`;
+    recRow.innerHTML = emptyHomeCardHTML(
+      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+      'No suggestions yet',
+      'Import audio files to unlock personalized offline mixes.'
+    );
   }
   attachCardClicks(recRow, 'song');
 }
@@ -1771,18 +1828,27 @@ function playNext(id) {
 audio.addEventListener('play', () => {
   State.isPlaying = true;
   updatePlayButtons();
-  $('#art-disc').classList.toggle('spin', State.settings.rotateArt);
+  $('#art-frame')?.classList.toggle('spin', State.settings.rotateArt);
+  $('#art-disc')?.classList.toggle('spin', State.settings.rotateArt);
   startVisualizer();
   renderQueue();
   updateMediaSessionPosition();
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = 'playing';
+  }
 });
 
 audio.addEventListener('pause', () => {
   State.isPlaying = false;
   updatePlayButtons();
-  $('#art-disc').classList.remove('spin');
+  $('#art-frame')?.classList.remove('spin');
+  $('#art-disc')?.classList.remove('spin');
+  stopVisualizer();
   renderQueue();
   updateMediaSessionPosition();
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = 'paused';
+  }
 });
 
 audio.addEventListener('ended', () => {
@@ -1848,11 +1914,18 @@ function updateMini() {
   const mini = $('#mini-player');
   if (!State.currentSong) {
     mini.classList.remove('visible');
+    document.body.classList.remove('has-mini-player');
+    $('#mini-title').textContent = '';
+    $('#mini-artist').textContent = '';
+    $('#mini-time').textContent = '';
+    const miniFill = $('#mini-progress-fill');
+    if (miniFill) miniFill.style.width = '0%';
     return;
   }
   mini.classList.add('visible');
-  $('#mini-title').textContent = State.currentSong.title;
-  $('#mini-artist').textContent = State.currentSong.artist;
+  document.body.classList.add('has-mini-player');
+  $('#mini-title').textContent = State.currentSong.title || 'Unknown Title';
+  $('#mini-artist').textContent = State.currentSong.artist || 'Unknown Artist';
   $('#mini-like')?.classList.toggle('like-active', State.favorites.includes(State.currentSong.id));
   const miniArt = $('#mini-art');
   if (State.currentSong.art) {
@@ -1866,11 +1939,41 @@ function updateMini() {
 
 function updateFullPlayer() {
   if (!State.currentSong) return;
-  $('#full-title').textContent = State.currentSong.title;
-  $('#full-artist').textContent = `${State.currentSong.artist} · ${State.currentSong.album}`;
-  $('#art-inner').style.backgroundImage = State.currentSong.art ? `url('${State.currentSong.art}')` : '';
-  $('#full-bg').style.backgroundImage = State.currentSong.art ? `url('${State.currentSong.art}')` : '';
+  $('#full-title').textContent = State.currentSong.title || 'Unknown Title';
+  $('#full-artist').textContent = `${State.currentSong.artist || 'Unknown Artist'} · ${State.currentSong.album || 'Unknown Album'}`;
+  
+  const fullArtImg = $('#full-art-img');
+  const fallback = $('#art-fallback');
+  const ambientGlow = $('#art-ambient-glow');
+  const fullBg = $('#full-bg');
+  
+  if (State.currentSong.art) {
+    if (fullArtImg) {
+      fullArtImg.src = State.currentSong.art;
+      fullArtImg.style.display = 'block';
+    }
+    if (fallback) fallback.style.display = 'none';
+    if (ambientGlow) ambientGlow.style.backgroundImage = `url('${State.currentSong.art}')`;
+    if (fullBg) fullBg.style.backgroundImage = `url('${State.currentSong.art}')`;
+    $('#art-inner').style.backgroundImage = `url('${State.currentSong.art}')`;
+  } else {
+    if (fullArtImg) {
+      fullArtImg.src = '';
+      fullArtImg.style.display = 'none';
+    }
+    if (fallback) fallback.style.display = 'grid';
+    if (ambientGlow) ambientGlow.style.backgroundImage = 'none';
+    if (fullBg) fullBg.style.backgroundImage = 'none';
+    $('#art-inner').style.backgroundImage = '';
+  }
+
+  $('#art-frame')?.classList.toggle('spin', State.settings.rotateArt && State.isPlaying);
+  $('#art-disc')?.classList.toggle('spin', State.settings.rotateArt && State.isPlaying);
   $('#like-btn').classList.toggle('like-active', State.favorites.includes(State.currentSong.id));
+
+  if (State.settings.playerStyle === 'dynamic') {
+    applyDynamicArtworkStyle(State.currentSong);
+  }
 }
 
 /* ============== QUEUE MANAGEMENT ============== */
@@ -2385,12 +2488,66 @@ async function restoreBackupJSON(file) {
 }
 
 /* ============== THEMES & PERSONALIZATION ============== */
+const VALID_PLAYER_STYLES = ['glass', 'immersive', 'minimal', 'transparent', 'dynamic', 'classic'];
+
 function applyTheme(name) {
   State.settings.theme = name;
   document.body.classList.remove('theme-dark', 'theme-light', 'theme-amoled', 'theme-custom');
   document.body.classList.add(`theme-${name}`);
   $$('.theme-pick').forEach((b) => b.classList.toggle('active', b.dataset.theme === name));
   persistState();
+}
+
+function applyPlayerStyle(style) {
+  if (!VALID_PLAYER_STYLES.includes(style)) style = 'glass';
+  State.settings.playerStyle = style;
+
+  VALID_PLAYER_STYLES.forEach((s) => {
+    document.body.classList.remove(`player-style-${s}`);
+  });
+  document.body.classList.add(`player-style-${style}`);
+
+  $$('#player-style-grid .player-style-card').forEach((card) => {
+    card.classList.toggle('active', card.dataset.style === style);
+  });
+
+  if (style === 'dynamic' && State.currentSong) {
+    applyDynamicArtworkStyle(State.currentSong);
+  } else if (style !== 'dynamic') {
+    document.documentElement.style.removeProperty('--player-dyn-bg1');
+    document.documentElement.style.removeProperty('--player-dyn-bg2');
+    document.documentElement.style.removeProperty('--player-dyn-accent');
+  }
+
+  persistState();
+}
+
+async function applyDynamicArtworkStyle(song) {
+  if (!song || !song.art) {
+    document.documentElement.style.setProperty('--player-dyn-bg1', '#1e1635');
+    document.documentElement.style.setProperty('--player-dyn-bg2', '#07070d');
+    return;
+  }
+
+  let colors = State.colorCache.get(song.id);
+  if (!colors) {
+    colors = await extractColorsFromImage(song.art);
+    if (colors && colors.length) State.colorCache.set(song.id, colors);
+  }
+
+  if (colors && colors.length) {
+    const c1 = colors[0];
+    const c2 = colors[1] || colors[0];
+    const bg1 = rgbToHex(Math.round(c1.r * 0.45), Math.round(c1.g * 0.45), Math.round(c1.b * 0.45));
+    const bg2 = rgbToHex(Math.round(c2.r * 0.15), Math.round(c2.g * 0.15), Math.round(c2.b * 0.15));
+    const accent = rgbToHex(c1.r, c1.g, c1.b);
+    document.documentElement.style.setProperty('--player-dyn-bg1', bg1);
+    document.documentElement.style.setProperty('--player-dyn-bg2', bg2);
+    document.documentElement.style.setProperty('--player-dyn-accent', accent);
+  } else {
+    document.documentElement.style.setProperty('--player-dyn-bg1', '#1e1635');
+    document.documentElement.style.setProperty('--player-dyn-bg2', '#07070d');
+  }
 }
 
 function applyAccent(color) {
@@ -2493,16 +2650,53 @@ function applyAccentFromColors(colors) {
 }
 
 /* ============== MULTI-MODE AUDIO VISUALIZER ============== */
+let vizResizeObserver = null;
+
+function resizeVisualizerCanvas() {
+  const canvas = $('#visualizer');
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  const rect = container ? container.getBoundingClientRect() : canvas.getBoundingClientRect();
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const width = Math.round(rect.width || canvas.offsetWidth || 300);
+  const height = Math.round(rect.height || canvas.offsetHeight || 46);
+  if (width > 0 && height > 0) {
+    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+    }
+  }
+}
+
+function stopVisualizer() {
+  if (vizRAF) {
+    cancelAnimationFrame(vizRAF);
+    vizRAF = null;
+  }
+  const canvas = $('#visualizer');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
 function startVisualizer() {
-  if (!State.settings.visualizer || !analyser) return;
+  if (!State.settings.visualizer || !analyser || !State.isPlaying) {
+    stopVisualizer();
+    return;
+  }
   const canvas = $('#visualizer');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const resize = () => {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-  };
-  resize();
+  if (!ctx) return;
+
+  resizeVisualizerCanvas();
+  if (!vizResizeObserver && window.ResizeObserver && canvas.parentElement) {
+    vizResizeObserver = new ResizeObserver(() => {
+      resizeVisualizerCanvas();
+    });
+    vizResizeObserver.observe(canvas.parentElement);
+  }
 
   const freqData = new Uint8Array(analyser.frequencyBinCount);
   const timeData = new Uint8Array(analyser.fftSize);
@@ -2510,11 +2704,19 @@ function startVisualizer() {
 
   const draw = () => {
     if (!State.isPlaying || !State.settings.visualizer) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stopVisualizer();
       return;
     }
     vizRAF = requestAnimationFrame(draw);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const logicalW = canvas.width / dpr;
+    const logicalH = canvas.height / dpr;
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, logicalW, logicalH);
+
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c5cff';
     const mode = State.settings.vizMode || 'bars';
 
@@ -2524,79 +2726,70 @@ function startVisualizer() {
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = accent;
       ctx.shadowColor = accent;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 8;
       ctx.beginPath();
-      const sliceWidth = canvas.width / timeData.length;
+      const sliceWidth = logicalW / timeData.length;
       let x = 0;
       for (let i = 0; i < timeData.length; i++) {
         const v = timeData[i] / 128.0;
-        const y = (v * canvas.height) / 2;
+        const y = (v * logicalH) / 2;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
         x += sliceWidth;
       }
       ctx.stroke();
-      ctx.shadowBlur = 0;
     } else if (mode === 'radial') {
       // Circular Ring Pulse Mode
       analyser.getByteFrequencyData(freqData);
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const radius = Math.min(cx, cy) * 0.7;
-      const bars = 48;
+      const cx = logicalW / 2;
+      const cy = logicalH / 2;
+      const radius = Math.min(cx, cy) * 0.65;
+      const bars = 40;
       const step = Math.floor(freqData.length / bars);
-      ctx.save();
       ctx.translate(cx, cy);
       for (let i = 0; i < bars; i++) {
         let v = 0;
         for (let j = 0; j < step; j++) v += freqData[i * step + j];
         v = v / step;
-        const barH = (v / 255) * 35;
+        const barH = (v / 255) * (Math.min(cx, cy) * 0.45);
         const rad = (i * 2 * Math.PI) / bars;
         ctx.rotate(rad);
         ctx.fillStyle = accent;
-        ctx.fillRect(0, radius, 2.5, barH);
+        ctx.fillRect(-1.25, radius, 2.5, barH);
         ctx.rotate(-rad);
       }
-      ctx.restore();
     } else if (mode === 'minimal') {
       // Minimal Ambient Bass Glow
       analyser.getByteFrequencyData(freqData);
       let bass = 0;
       for (let i = 0; i < 10; i++) bass += freqData[i];
       bass = bass / 10;
-      const alpha = Math.min(0.8, (bass / 255) * 0.9);
-      const grad = ctx.createRadialGradient(
-        canvas.width / 2,
-        canvas.height,
-        10,
-        canvas.width / 2,
-        canvas.height,
-        canvas.width / 2
-      );
-      grad.addColorStop(0, accent + Math.round(alpha * 255).toString(16).padStart(2, '0'));
+      const alpha = Math.min(0.85, (bass / 255) * 0.95);
+      const grad = ctx.createLinearGradient(0, logicalH, 0, 0);
+      grad.addColorStop(0, accent + Math.round(alpha * 220).toString(16).padStart(2, '0'));
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, logicalW, logicalH);
     } else {
       // Default Frequency Bars Mode
       analyser.getByteFrequencyData(freqData);
-      const bars = 44;
+      const bars = 36;
       const step = Math.floor(freqData.length / bars);
-      const bw = canvas.width / bars;
+      const bw = logicalW / bars;
       for (let i = 0; i < bars; i++) {
         let v = 0;
         for (let j = 0; j < step; j++) v += freqData[i * step + j];
         v = v / step;
-        const h = (v / 255) * canvas.height * 0.9;
+        const h = Math.max(2, (v / 255) * logicalH * 0.92);
         const x = i * bw;
-        const grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - h);
-        grad.addColorStop(0, accent + '00');
+        const grad = ctx.createLinearGradient(0, logicalH, 0, logicalH - h);
+        grad.addColorStop(0, accent + '22');
         grad.addColorStop(1, accent);
         ctx.fillStyle = grad;
-        ctx.fillRect(x + bw * 0.15, canvas.height - h, bw * 0.7, h);
+        ctx.fillRect(x + bw * 0.15, logicalH - h, bw * 0.7, h);
       }
     }
+    ctx.restore();
   };
   draw();
 }
@@ -2791,6 +2984,21 @@ function bindEvents() {
   $$('.color-dot[data-color]').forEach((b) => (b.onclick = () => applyAccent(b.dataset.color)));
   $('#custom-accent').oninput = (e) => applyAccent(e.target.value);
 
+  // Player Appearance Style Selection
+  $$('#player-style-grid .player-style-card').forEach((btn) => {
+    btn.onclick = () => {
+      applyPlayerStyle(btn.dataset.style);
+      toast(`Player style: ${btn.dataset.style.charAt(0).toUpperCase() + btn.dataset.style.slice(1)}`);
+    };
+  });
+  const resetStyleBtn = $('#btn-reset-player-style');
+  if (resetStyleBtn) {
+    resetStyleBtn.onclick = () => {
+      applyPlayerStyle('glass');
+      toast('Player style reset to Glass');
+    };
+  }
+
   // Custom Wallpaper
   $('#wallpaper-input').onchange = (e) => {
     const file = e.target.files[0];
@@ -2817,7 +3025,8 @@ function bindEvents() {
   $('#rotate-toggle').onchange = (e) => {
     State.settings.rotateArt = e.target.checked;
     persistState();
-    $('#art-disc').classList.toggle('spin', State.isPlaying && e.target.checked);
+    $('#art-frame')?.classList.toggle('spin', State.isPlaying && e.target.checked);
+    $('#art-disc')?.classList.toggle('spin', State.isPlaying && e.target.checked);
   };
   $('#autoplay-toggle').onchange = (e) => {
     State.settings.autoplay = e.target.checked;
@@ -3208,6 +3417,7 @@ async function init() {
 
   // Apply saved theme & settings
   applyTheme(State.settings.theme || 'dark');
+  applyPlayerStyle(State.settings.playerStyle || 'glass');
   applyAccent(State.settings.accent || '#7c5cff');
   applyBlur(State.settings.blur ?? 30);
   applyDim(State.settings.dim ?? 55);
@@ -3264,6 +3474,20 @@ async function init() {
       .catch((err) => console.warn('Service worker registration failed', err));
   }
 }
+
+/* Background & Visibility: Suspend visualizer RAF loop when screen is locked or hidden to preserve battery */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (vizRAF) {
+      cancelAnimationFrame(vizRAF);
+      vizRAF = null;
+    }
+  } else {
+    if (State.isPlaying && State.settings.visualizer) {
+      startVisualizer();
+    }
+  }
+});
 
 document.addEventListener('DOMContentLoaded', init);
 
