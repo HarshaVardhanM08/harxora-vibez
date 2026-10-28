@@ -3,7 +3,7 @@
    Cache-first shell strategy for reliable offline playback
    ================================================================= */
 
-const CACHE_NAME = 'harxora-vibez-v3';
+const CACHE_NAME = 'harxora-vibez-v4';
 
 // Essential shell resources required to boot and run offline
 const SHELL_ASSETS = [

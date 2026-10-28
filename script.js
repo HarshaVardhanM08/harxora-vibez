@@ -131,9 +131,11 @@ const State = {
   shuffle: false,
   repeat: 'off', // 'off' | 'one' | 'all'
   settings: {
-    theme: 'dark',
+    theme: 'midnight',
     playerStyle: 'glass', // 'glass' | 'immersive' | 'minimal' | 'transparent' | 'dynamic' | 'classic'
+    playerMatchTheme: true,
     accent: '#7c5cff',
+    surfaceAlpha: 55, // 5 to 95 (%)
     blur: 30,
     dim: 55,
     animations: true,
@@ -143,6 +145,18 @@ const State = {
     autoplay: true,
     mediaSession: true,
     wallpaper: null,
+    wallpaperPreset: 'none',
+    wallpaperScope: 'app',
+    density: 'comfortable',
+    radius: 'rounded',
+    gridSize: 'standard',
+    showMiniArt: true,
+    cardGlow: true,
+    fontFamily: 'modern',
+    fontScale: 'standard',
+    animSpeed: 'full',
+    ambientGlow: true,
+    reducedMotion: false,
     volume: 0.8,
     speed: 1,
     totalPlaySeconds: 0,
@@ -1982,6 +1996,11 @@ function renderQueue() {
   const countEl = $('#queue-total-count');
   if (countEl) countEl.textContent = `${State.queue.length} track${State.queue.length !== 1 ? 's' : ''}`;
 
+  const miniBadge = $('#mini-queue-badge');
+  if (miniBadge) miniBadge.textContent = String(State.queue.length);
+  const fullBadge = $('#full-queue-count-badge');
+  if (fullBadge) fullBadge.textContent = String(State.queue.length);
+
   const totalSecs = State.queue.reduce((acc, qid) => {
     const s = State.songs.find((x) => x.id === qid);
     return acc + (s?.duration || 0);
@@ -2487,18 +2506,50 @@ async function restoreBackupJSON(file) {
   }
 }
 
-/* ============== THEMES & PERSONALIZATION ============== */
+/* ============== THEMES & PERSONALIZATION STUDIO ============== */
+const VALID_THEMES = ['midnight', 'neon', 'glass', 'minimal', 'immersive', 'aurora', 'light', 'classic', 'dark', 'amoled'];
 const VALID_PLAYER_STYLES = ['glass', 'immersive', 'minimal', 'transparent', 'dynamic', 'classic'];
 
+const WALLPAPER_PRESETS = {
+  aurora: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23041014"/><stop offset="50%" stop-color="%230e262e"/><stop offset="100%" stop-color="%231a0b2e"/></linearGradient><radialGradient id="r" cx="60%" cy="30%" r="50%"><stop offset="0%" stop-color="%2310b981" stop-opacity="0.35"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23g)"/><rect width="100%" height="100%" fill="url(%23r)"/></svg>',
+  nebula: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230a0718"/><stop offset="50%" stop-color="%231b1035"/><stop offset="100%" stop-color="%23080512"/></linearGradient><radialGradient id="r1" cx="30%" cy="40%" r="60%"><stop offset="0%" stop-color="%238b5cf6" stop-opacity="0.38"/><stop offset="100%" stop-color="transparent"/></radialGradient><radialGradient id="r2" cx="80%" cy="70%" r="50%"><stop offset="0%" stop-color="%23ec4899" stop-opacity="0.25"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23g)"/><rect width="100%" height="100%" fill="url(%23r1)"/><rect width="100%" height="100%" fill="url(%23r2)"/></svg>',
+  mesh: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%2308090f"/><stop offset="100%" stop-color="%23141826"/></linearGradient><pattern id="p" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,240,255,0.08)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23g)"/><rect width="100%" height="100%" fill="url(%23p)"/></svg>',
+};
+
 function applyTheme(name) {
+  if (!VALID_THEMES.includes(name)) name = 'midnight';
   State.settings.theme = name;
-  document.body.classList.remove('theme-dark', 'theme-light', 'theme-amoled', 'theme-custom');
+
+  VALID_THEMES.forEach((t) => document.body.classList.remove(`theme-${t}`));
+  document.body.classList.remove('theme-custom');
   document.body.classList.add(`theme-${name}`);
+
+  $$('#theme-preset-grid .theme-card').forEach((card) => {
+    card.classList.toggle('active', card.dataset.theme === name);
+  });
   $$('.theme-pick').forEach((b) => b.classList.toggle('active', b.dataset.theme === name));
+
+  // If player match theme is enabled, update player skin accordingly
+  if (State.settings.playerMatchTheme) {
+    const themePlayerMap = {
+      midnight: 'classic',
+      neon: 'transparent',
+      glass: 'glass',
+      minimal: 'minimal',
+      immersive: 'immersive',
+      aurora: 'dynamic',
+      light: 'glass',
+      classic: 'classic',
+      dark: 'classic',
+      amoled: 'minimal',
+    };
+    applyPlayerStyle(themePlayerMap[name] || 'glass', false);
+  }
+
   persistState();
 }
 
-function applyPlayerStyle(style) {
+function applyPlayerStyle(style, saveMatch = true) {
   if (!VALID_PLAYER_STYLES.includes(style)) style = 'glass';
   State.settings.playerStyle = style;
 
@@ -2517,6 +2568,12 @@ function applyPlayerStyle(style) {
     document.documentElement.style.removeProperty('--player-dyn-bg1');
     document.documentElement.style.removeProperty('--player-dyn-bg2');
     document.documentElement.style.removeProperty('--player-dyn-accent');
+  }
+
+  if (saveMatch && State.settings.playerMatchTheme) {
+    State.settings.playerMatchTheme = false;
+    const matchToggle = $('#player-match-theme-toggle');
+    if (matchToggle) matchToggle.checked = false;
   }
 
   persistState();
@@ -2556,7 +2613,8 @@ function applyAccent(color) {
   const rgb = hexToRgb(color);
   if (rgb) document.documentElement.style.setProperty('--accent-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
   $$('.color-dot[data-color]').forEach((b) => b.classList.toggle('active', b.dataset.color === color));
-  $('#custom-accent').value = color;
+  const customAccent = $('#custom-accent');
+  if (customAccent) customAccent.value = color;
   persistState();
 }
 
@@ -2567,6 +2625,17 @@ function hexToRgb(hex) {
 
 function rgbToHex(r, g, b) {
   return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+
+function applySurfaceAlpha(val) {
+  val = Math.max(5, Math.min(95, +val || 55));
+  State.settings.surfaceAlpha = val;
+  document.documentElement.style.setProperty('--surface-alpha', (val / 100).toFixed(2));
+  const alphaValEl = $('#surface-alpha-val');
+  if (alphaValEl) alphaValEl.textContent = val + '%';
+  const slider = $('#surface-alpha-slider');
+  if (slider) slider.value = val;
+  persistState();
 }
 
 function applyWallpaper(dataUrl) {
@@ -2584,16 +2653,233 @@ function applyWallpaper(dataUrl) {
   persistState();
 }
 
+function applyWallpaperPreset(preset) {
+  State.settings.wallpaperPreset = preset;
+  $$('#wallpaper-presets .chip').forEach((c) => c.classList.toggle('active', c.dataset.wp === preset));
+  if (preset === 'none' || !WALLPAPER_PRESETS[preset]) {
+    applyWallpaper(null);
+  } else {
+    applyWallpaper(WALLPAPER_PRESETS[preset]);
+  }
+}
+
+function applyWallpaperScope(scope) {
+  if (scope !== 'player') scope = 'app';
+  State.settings.wallpaperScope = scope;
+  document.body.classList.toggle('wp-player-only', scope === 'player');
+  $$('#wallpaper-scope-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.scope === scope));
+  persistState();
+}
+
 function applyBlur(v) {
   State.settings.blur = v;
   document.documentElement.style.setProperty('--blur', v + 'px');
+  const blurValEl = $('#blur-val');
+  if (blurValEl) blurValEl.textContent = v + 'px';
+  const slider = $('#blur-slider');
+  if (slider) slider.value = v;
   persistState();
 }
 
 function applyDim(v) {
   State.settings.dim = v;
   document.documentElement.style.setProperty('--dim', (v / 100).toString());
+  const dimValEl = $('#dim-val');
+  if (dimValEl) dimValEl.textContent = v + '%';
+  const slider = $('#dim-slider');
+  if (slider) slider.value = v;
   persistState();
+}
+
+function applyLayoutDensity(density) {
+  if (density !== 'compact') density = 'comfortable';
+  State.settings.density = density;
+  document.body.classList.toggle('density-compact', density === 'compact');
+  $$('#density-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.density === density));
+  persistState();
+}
+
+function applyCornerRadius(radius) {
+  if (!['rounded', 'soft', 'sharp'].includes(radius)) radius = 'rounded';
+  State.settings.radius = radius;
+  document.body.classList.remove('radius-rounded', 'radius-soft', 'radius-sharp');
+  document.body.classList.add(`radius-${radius}`);
+  $$('#radius-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.radius === radius));
+  persistState();
+}
+
+function applyGridSize(grid) {
+  if (!['compact', 'standard', 'large'].includes(grid)) grid = 'standard';
+  State.settings.gridSize = grid;
+  document.body.classList.remove('grid-compact', 'grid-large');
+  if (grid !== 'standard') document.body.classList.add(`grid-${grid}`);
+  $$('#grid-size-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.grid === grid));
+  persistState();
+}
+
+function applyFontFamily(font) {
+  if (!['modern', 'rounded', 'tech', 'mono'].includes(font)) font = 'modern';
+  State.settings.fontFamily = font;
+  document.body.classList.remove('font-rounded', 'font-tech', 'font-mono');
+  if (font !== 'modern') document.body.classList.add(`font-${font}`);
+  $$('#font-family-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.font === font));
+  persistState();
+}
+
+function applyFontScale(scale) {
+  if (!['small', 'standard', 'large'].includes(scale)) scale = 'standard';
+  State.settings.fontScale = scale;
+  document.documentElement.classList.remove('font-scale-small', 'font-scale-large');
+  if (scale !== 'standard') document.documentElement.classList.add(`font-scale-${scale}`);
+  $$('#font-scale-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.scale === scale));
+  persistState();
+}
+
+function applyAnimSpeed(speed) {
+  if (!['full', 'subtle', 'off'].includes(speed)) speed = 'full';
+  State.settings.animSpeed = speed;
+  State.settings.animations = (speed !== 'off');
+  document.body.classList.remove('anim-subtle', 'anim-off', 'no-anim');
+  if (speed === 'subtle') document.body.classList.add('anim-subtle');
+  else if (speed === 'off') document.body.classList.add('anim-off', 'no-anim');
+  $$('#anim-speed-control .segment-btn').forEach((b) => b.classList.toggle('active', b.dataset.speed === speed));
+  persistState();
+}
+
+function exportAppearanceJSON() {
+  const appearanceData = {
+    app: 'Harxora Vibez',
+    type: 'appearance-preset',
+    version: 2,
+    timestamp: new Date().toISOString(),
+    appearance: {
+      theme: State.settings.theme,
+      playerStyle: State.settings.playerStyle,
+      playerMatchTheme: State.settings.playerMatchTheme,
+      accent: State.settings.accent,
+      surfaceAlpha: State.settings.surfaceAlpha,
+      blur: State.settings.blur,
+      dim: State.settings.dim,
+      wallpaper: State.settings.wallpaper,
+      wallpaperPreset: State.settings.wallpaperPreset,
+      wallpaperScope: State.settings.wallpaperScope,
+      density: State.settings.density,
+      radius: State.settings.radius,
+      gridSize: State.settings.gridSize,
+      showMiniArt: State.settings.showMiniArt,
+      cardGlow: State.settings.cardGlow,
+      fontFamily: State.settings.fontFamily,
+      fontScale: State.settings.fontScale,
+      animSpeed: State.settings.animSpeed,
+      ambientGlow: State.settings.ambientGlow,
+      reducedMotion: State.settings.reducedMotion,
+    },
+  };
+  const jsonStr = JSON.stringify(appearanceData, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `harxora-vibez-theme-${State.settings.theme}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Appearance theme exported!');
+}
+
+async function importAppearanceJSON(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const ap = data.appearance || data;
+
+    if (ap.theme) applyTheme(ap.theme);
+    if (ap.accent) applyAccent(ap.accent);
+    if (ap.surfaceAlpha !== undefined) applySurfaceAlpha(ap.surfaceAlpha);
+    if (ap.blur !== undefined) applyBlur(ap.blur);
+    if (ap.dim !== undefined) applyDim(ap.dim);
+    if (ap.playerStyle) applyPlayerStyle(ap.playerStyle, ap.playerMatchTheme === false);
+    if (ap.playerMatchTheme !== undefined) {
+      State.settings.playerMatchTheme = !!ap.playerMatchTheme;
+      const toggle = $('#player-match-theme-toggle');
+      if (toggle) toggle.checked = State.settings.playerMatchTheme;
+    }
+    if (ap.density) applyLayoutDensity(ap.density);
+    if (ap.radius) applyCornerRadius(ap.radius);
+    if (ap.gridSize) applyGridSize(ap.gridSize);
+    if (ap.fontFamily) applyFontFamily(ap.fontFamily);
+    if (ap.fontScale) applyFontScale(ap.fontScale);
+    if (ap.animSpeed) applyAnimSpeed(ap.animSpeed);
+    if (ap.wallpaperScope) applyWallpaperScope(ap.wallpaperScope);
+    if (ap.wallpaper) applyWallpaper(ap.wallpaper);
+
+    if (ap.showMiniArt !== undefined) {
+      State.settings.showMiniArt = !!ap.showMiniArt;
+      document.body.classList.toggle('hide-mini-art', !State.settings.showMiniArt);
+      const toggle = $('#mini-art-toggle');
+      if (toggle) toggle.checked = State.settings.showMiniArt;
+    }
+    if (ap.cardGlow !== undefined) {
+      State.settings.cardGlow = !!ap.cardGlow;
+      document.body.classList.toggle('no-card-glow', !State.settings.cardGlow);
+      const toggle = $('#card-glow-toggle');
+      if (toggle) toggle.checked = State.settings.cardGlow;
+    }
+    if (ap.ambientGlow !== undefined) {
+      State.settings.ambientGlow = !!ap.ambientGlow;
+      document.body.classList.toggle('no-ambient-glow', !State.settings.ambientGlow);
+      const toggle = $('#ambient-glow-toggle');
+      if (toggle) toggle.checked = State.settings.ambientGlow;
+    }
+
+    persistState();
+    toast('Appearance preset imported successfully!');
+  } catch (err) {
+    console.error(err);
+    toast('Failed to load appearance JSON');
+  }
+}
+
+function resetAppearanceDefaults() {
+  applyTheme('midnight');
+  applyAccent('#7c5cff');
+  applySurfaceAlpha(55);
+  applyBlur(30);
+  applyDim(55);
+  State.settings.playerMatchTheme = true;
+  const matchToggle = $('#player-match-theme-toggle');
+  if (matchToggle) matchToggle.checked = true;
+  applyPlayerStyle('glass', false);
+  applyLayoutDensity('comfortable');
+  applyCornerRadius('rounded');
+  applyGridSize('standard');
+  applyFontFamily('modern');
+  applyFontScale('standard');
+  applyAnimSpeed('full');
+  applyWallpaperPreset('none');
+  applyWallpaperScope('app');
+
+  State.settings.showMiniArt = true;
+  document.body.classList.remove('hide-mini-art');
+  const miniArtToggle = $('#mini-art-toggle');
+  if (miniArtToggle) miniArtToggle.checked = true;
+
+  State.settings.cardGlow = true;
+  document.body.classList.remove('no-card-glow');
+  const cardGlowToggle = $('#card-glow-toggle');
+  if (cardGlowToggle) cardGlowToggle.checked = true;
+
+  State.settings.ambientGlow = true;
+  document.body.classList.remove('no-ambient-glow');
+  const ambientGlowToggle = $('#ambient-glow-toggle');
+  if (ambientGlowToggle) ambientGlowToggle.checked = true;
+
+  State.settings.reducedMotion = false;
+  const redMotionToggle = $('#reduced-motion-toggle');
+  if (redMotionToggle) redMotionToggle.checked = false;
+
+  persistState();
+  toast('Appearance settings reset to defaults');
 }
 
 function extractColorsFromImage(src) {
@@ -2979,12 +3265,48 @@ function bindEvents() {
   // Playlist creation
   $('#new-playlist-btn').onclick = newPlaylist;
 
-  // Themes and Accent
+  // Theme Presets Studio
+  $$('#theme-preset-grid .theme-card').forEach((b) => (b.onclick = () => applyTheme(b.dataset.theme)));
   $$('.theme-pick').forEach((b) => (b.onclick = () => applyTheme(b.dataset.theme)));
+  $$('#accent-color-row .color-dot[data-color]').forEach((b) => (b.onclick = () => applyAccent(b.dataset.color)));
   $$('.color-dot[data-color]').forEach((b) => (b.onclick = () => applyAccent(b.dataset.color)));
-  $('#custom-accent').oninput = (e) => applyAccent(e.target.value);
+  const customAccentInput = $('#custom-accent');
+  if (customAccentInput) customAccentInput.oninput = (e) => applyAccent(e.target.value);
 
-  // Player Appearance Style Selection
+  // Surface Transparency and Blur Sliders
+  const surfaceAlphaSlider = $('#surface-alpha-slider');
+  if (surfaceAlphaSlider) surfaceAlphaSlider.oninput = (e) => applySurfaceAlpha(+e.target.value);
+  $('#blur-slider').oninput = (e) => applyBlur(+e.target.value);
+  $('#dim-slider').oninput = (e) => applyDim(+e.target.value);
+
+  // Wallpaper Controls & Presets
+  $('#wallpaper-input').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = () => applyWallpaper(r.result);
+    r.readAsDataURL(file);
+  };
+  $('#wallpaper-clear').onclick = () => {
+    applyWallpaper(null);
+    applyWallpaperPreset('none');
+  };
+  $$('#wallpaper-presets .chip').forEach((c) => {
+    c.onclick = () => applyWallpaperPreset(c.dataset.wp);
+  });
+  $$('#wallpaper-scope-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyWallpaperScope(b.dataset.scope);
+  });
+
+  // Player Match Theme Toggle & Appearance Styles
+  const matchThemeToggle = $('#player-match-theme-toggle');
+  if (matchThemeToggle) {
+    matchThemeToggle.onchange = (e) => {
+      State.settings.playerMatchTheme = e.target.checked;
+      persistState();
+      if (e.target.checked) applyTheme(State.settings.theme);
+    };
+  }
   $$('#player-style-grid .player-style-card').forEach((btn) => {
     btn.onclick = () => {
       applyPlayerStyle(btn.dataset.style);
@@ -2999,17 +3321,73 @@ function bindEvents() {
     };
   }
 
-  // Custom Wallpaper
-  $('#wallpaper-input').onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = () => applyWallpaper(r.result);
-    r.readAsDataURL(file);
-  };
-  $('#wallpaper-clear').onclick = () => applyWallpaper(null);
-  $('#blur-slider').oninput = (e) => applyBlur(+e.target.value);
-  $('#dim-slider').oninput = (e) => applyDim(+e.target.value);
+  // Layout & Density
+  $$('#density-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyLayoutDensity(b.dataset.density);
+  });
+  $$('#radius-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyCornerRadius(b.dataset.radius);
+  });
+  $$('#grid-size-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyGridSize(b.dataset.grid);
+  });
+  const miniArtToggle = $('#mini-art-toggle');
+  if (miniArtToggle) {
+    miniArtToggle.onchange = (e) => {
+      State.settings.showMiniArt = e.target.checked;
+      document.body.classList.toggle('hide-mini-art', !e.target.checked);
+      persistState();
+    };
+  }
+  const cardGlowToggle = $('#card-glow-toggle');
+  if (cardGlowToggle) {
+    cardGlowToggle.onchange = (e) => {
+      State.settings.cardGlow = e.target.checked;
+      document.body.classList.toggle('no-card-glow', !e.target.checked);
+      persistState();
+    };
+  }
+
+  // Typography Controls
+  $$('#font-family-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyFontFamily(b.dataset.font);
+  });
+  $$('#font-scale-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyFontScale(b.dataset.scale);
+  });
+
+  // Motion & Visual Effects
+  $$('#anim-speed-control .segment-btn').forEach((b) => {
+    b.onclick = () => applyAnimSpeed(b.dataset.speed);
+  });
+  const ambientGlowToggle = $('#ambient-glow-toggle');
+  if (ambientGlowToggle) {
+    ambientGlowToggle.onchange = (e) => {
+      State.settings.ambientGlow = e.target.checked;
+      document.body.classList.toggle('no-ambient-glow', !e.target.checked);
+      persistState();
+    };
+  }
+  const redMotionToggle = $('#reduced-motion-toggle');
+  if (redMotionToggle) {
+    redMotionToggle.onchange = (e) => {
+      State.settings.reducedMotion = e.target.checked;
+      document.body.classList.toggle('reduced-motion', e.target.checked);
+      persistState();
+    };
+  }
+
+  // Appearance Presets Backup & Reset
+  const exportAppBtn = $('#btn-export-appearance');
+  if (exportAppBtn) exportAppBtn.onclick = exportAppearanceJSON;
+  const importAppInput = $('#appearance-file-input');
+  if (importAppInput) {
+    importAppInput.onchange = (e) => {
+      if (e.target.files[0]) importAppearanceJSON(e.target.files[0]);
+    };
+  }
+  const resetAppBtn = $('#btn-reset-appearance');
+  if (resetAppBtn) resetAppBtn.onclick = resetAppearanceDefaults;
 
   // Behavior Toggles
   $('#anim-toggle').onchange = (e) => {
@@ -3111,10 +3489,22 @@ function bindEvents() {
     updateProgress();
   };
   $('#mini-player').onclick = (e) => {
-    if (e.target.closest('button') || e.target.closest('#mini-progress')) return;
+    if (e.target.closest('button') || e.target.closest('#mini-progress') || e.target.closest('#mini-sub-actions')) return;
     openFull();
   };
   $('#expand-btn').onclick = openFull;
+
+  // Mini Player Sub-actions (Queue & Lyrics)
+  const miniQueueBtn = $('#mini-queue-btn');
+  if (miniQueueBtn) miniQueueBtn.onclick = (e) => {
+    e.stopPropagation();
+    openQueuePanel();
+  };
+  const miniLyricsBtn = $('#mini-lyrics-btn');
+  if (miniLyricsBtn) miniLyricsBtn.onclick = (e) => {
+    e.stopPropagation();
+    openLyricsPanel();
+  };
 
   // Full Player Controls
   $('#full-close').onclick = closeFull;
@@ -3127,15 +3517,27 @@ function bindEvents() {
   $('#addqueue-btn').onclick = () => State.currentSong && showAddToPlaylist(State.currentSong.id);
   $('#fullscreen-btn').onclick = toggleFullscreen;
   $('#lyrics-btn').onclick = () => {
-    switchSidePanel('lyrics');
-    openSidePanel();
-  };
-  $('#full-queue-btn').onclick = () => {
-    switchSidePanel('queue');
-    if ($('#side-panel').classList.contains('open') && window.innerWidth <= 900) {
+    if ($('#side-panel').classList.contains('open') && $('#side-lyrics').style.display !== 'none') {
       closeSidePanel();
     } else {
-      openSidePanel();
+      openLyricsPanel();
+    }
+  };
+  const fullQueueBottomBtn = $('#full-queue-bottom-btn');
+  if (fullQueueBottomBtn) {
+    fullQueueBottomBtn.onclick = () => {
+      if ($('#side-panel').classList.contains('open') && $('#side-queue').style.display !== 'none') {
+        closeSidePanel();
+      } else {
+        openQueuePanel();
+      }
+    };
+  }
+  $('#full-queue-btn').onclick = () => {
+    if ($('#side-panel').classList.contains('open')) {
+      closeSidePanel();
+    } else {
+      openQueuePanel();
     }
   };
 
@@ -3361,12 +3763,25 @@ function showAddMusicMenu() {
 }
 
 /* ============== FULL PLAYER EXPANSION & SIDE PANELS ============== */
+function openQueuePanel() {
+  switchSidePanel('queue');
+  openSidePanel();
+  renderQueue();
+}
+
+function openLyricsPanel() {
+  switchSidePanel('lyrics');
+  openSidePanel();
+  if (State.currentSong) loadLyricsForSong(State.currentSong.id);
+}
+
 function openFull() {
   if (!State.currentSong) return;
   $('#full-player').classList.add('open');
+  document.body.classList.add('full-player-active');
   updateFullPlayer();
   if (window.innerWidth > 900) {
-    $('#side-panel')?.classList.add('open');
+    openSidePanel();
   }
   renderQueue();
   loadLyricsForSong(State.currentSong.id);
@@ -3375,6 +3790,7 @@ function openFull() {
 
 function closeFull() {
   $('#full-player').classList.remove('open');
+  document.body.classList.remove('full-player-active');
   closeSidePanel();
 }
 
@@ -3392,13 +3808,13 @@ function switchSidePanel(which) {
 
 function openSidePanel() {
   $('#side-panel')?.classList.add('open');
-  if (window.innerWidth <= 900) {
-    $('#side-panel-backdrop')?.classList.add('show');
-  }
+  document.body.classList.add('side-panel-open');
+  $('#side-panel-backdrop')?.classList.add('show');
 }
 
 function closeSidePanel() {
   $('#side-panel')?.classList.remove('open');
+  document.body.classList.remove('side-panel-open');
   $('#side-panel-backdrop')?.classList.remove('show');
 }
 
@@ -3415,18 +3831,48 @@ function toggleFullscreen() {
 async function init() {
   loadPersistedState();
 
-  // Apply saved theme & settings
-  applyTheme(State.settings.theme || 'dark');
-  applyPlayerStyle(State.settings.playerStyle || 'glass');
+  // Apply saved theme & appearance settings
+  applyTheme(State.settings.theme || 'midnight');
   applyAccent(State.settings.accent || '#7c5cff');
+  applySurfaceAlpha(State.settings.surfaceAlpha ?? 55);
   applyBlur(State.settings.blur ?? 30);
   applyDim(State.settings.dim ?? 55);
+  applyPlayerStyle(State.settings.playerStyle || 'glass', false);
+  const matchToggle = $('#player-match-theme-toggle');
+  if (matchToggle) matchToggle.checked = !!State.settings.playerMatchTheme;
+  applyLayoutDensity(State.settings.density || 'comfortable');
+  applyCornerRadius(State.settings.radius || 'rounded');
+  applyGridSize(State.settings.gridSize || 'standard');
+  applyFontFamily(State.settings.fontFamily || 'modern');
+  applyFontScale(State.settings.fontScale || 'standard');
+  applyAnimSpeed(State.settings.animSpeed || 'full');
+  applyWallpaperScope(State.settings.wallpaperScope || 'app');
 
   if (State.settings.wallpaper) {
     $('#bg-layer').style.backgroundImage = `url('${State.settings.wallpaper}')`;
     $('#bg-layer').classList.add('has-wallpaper');
   }
-  document.body.classList.toggle('no-anim', !State.settings.animations);
+
+  if (State.settings.showMiniArt !== undefined) {
+    document.body.classList.toggle('hide-mini-art', !State.settings.showMiniArt);
+    const miniArtToggle = $('#mini-art-toggle');
+    if (miniArtToggle) miniArtToggle.checked = State.settings.showMiniArt;
+  }
+  if (State.settings.cardGlow !== undefined) {
+    document.body.classList.toggle('no-card-glow', !State.settings.cardGlow);
+    const cardGlowToggle = $('#card-glow-toggle');
+    if (cardGlowToggle) cardGlowToggle.checked = State.settings.cardGlow;
+  }
+  if (State.settings.ambientGlow !== undefined) {
+    document.body.classList.toggle('no-ambient-glow', !State.settings.ambientGlow);
+    const ambientGlowToggle = $('#ambient-glow-toggle');
+    if (ambientGlowToggle) ambientGlowToggle.checked = State.settings.ambientGlow;
+  }
+  if (State.settings.reducedMotion) {
+    document.body.classList.add('reduced-motion');
+    const redMotionToggle = $('#reduced-motion-toggle');
+    if (redMotionToggle) redMotionToggle.checked = true;
+  }
 
   // Settings inputs
   $('#blur-slider').value = State.settings.blur;

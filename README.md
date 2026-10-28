@@ -41,7 +41,16 @@
 - **Top 5 Most Played**: Track ranking based on your playback count with instant one-click playback.
 - **Top Artists & Genre Breakdown**: Visual breakdown computed entirely offline from your personal collection.
 
-### 🎨 Visual Aesthetics, Themes & Player Styles
+### 🎨 Visual Aesthetics, Themes & Personalization Studio
+- **Complete Interface Theme Presets (8 Handcrafted Modes)**:
+  1. **Midnight**: Pure OLED pitch-black backdrop, subtle indigo accents (`#6366f1`), and high-contrast typography.
+  2. **Neon Cyber**: Dark carbon slate with luminous electric cyan (`#00f0ff`) and vivid magenta glow, cybernetic neon borders.
+  3. **Aero Glass**: Translucent frosted crystalline surfaces with refractive backdrop blur and soft luminous reflections.
+  4. **Nordic Minimal**: Distraction-free flat monochrome charcoal (`#17181c`), clean silver trim, and zero glowing shadows.
+  5. **Immersive Cosmic**: Twilight atmospheric background with radiant violet aura and warm cinematic highlights.
+  6. **Aurora Borealis**: Flowing northern lights aesthetic with emerald jade (`#10b981`) and deep amethyst sheen.
+  7. **Daylight Light**: Refined porcelain canvas (`#f6f8fc`), crisp slate text, soft daylight shadows, and royal blue accents.
+  8. **Audiophile Classic**: Matte studio charcoal with warm amber brass hardware dials and subtle metallic trim.
 - **Dedicated Player Appearance (6 Distinct Styles)**:
   1. **Glass** *(Default)*: Translucent glassmorphic surfaces, subtle blur, fine borders, soft highlights.
   2. **Immersive**: Cinematic backdrop with artwork-inspired gradients and radiant ambient glow.
@@ -49,14 +58,38 @@
   4. **Transparent**: Ultra-sheer backdrop allowing wallpapers to show through while maintaining high-contrast controls.
   5. **Dynamic Artwork**: Derives background gradients and accent colors directly from the active track's cover art in real time.
   6. **Classic**: Grounded dark matte finish with familiar media player ergonomics.
-- **Redesigned Expanded Player**:
-  - **Fluid Framed Artwork**: Preserves original cover aspect ratios with `object-fit: contain` / `cover` inside an elegant rounded frame—no center vinyl hole punching or unexpected cropping.
+- **Dynamic Surface & Glassmorphism Controls**:
+  - Application-wide **Surface Opacity** slider (5% to 95%).
+  - Real-time **Glass Blur** slider (0px to 60px).
+  - Background **Dimming** slider (0% to 90%).
+- **Wallpaper Studio & Visibility Scope**:
+  - Upload custom high-resolution background photos with automatic color extraction.
+  - Curated preset textures (*Aurora Glow*, *Cosmic Nebula*, *Cyber Grid*).
+  - **Wallpaper Scope**: Choose whether your custom wallpaper displays across the *Whole Application* or exclusively within the *Expanded Player*.
+- **Layout Density & Interface Ergonomics**:
+  - **Interface Density**: *Comfortable* (generous touch targets) or *Compact* (streamlined row heights and dense card grids).
+  - **Corner Radius**: *Rounded (18px)*, *Soft (10px)*, or *Sharp (4px)*.
+  - **Grid Card Sizing**: *Compact*, *Standard*, or *Large*.
+  - Mini-player album artwork visibility toggle.
+  - Card hover glow effect toggle.
+- **Typography & Font Scaling**:
+  - 4 font personality presets: *Modern Sans*, *Clean Rounded*, *Geometric Tech*, and *Monospace Accent*.
+  - 3 global font scales: *Small (92%)*, *Standard (100%)*, and *Large (108%)*.
+- **Motion & Visual Effects**:
+  - 3 animation speeds: *Full Motion*, *Subtle (140ms)*, or *Off (zero animations)*.
+  - Expanded player ambient aura glow toggle.
+  - System reduced-motion preference compliance.
+- **Appearance Preset Backup, Export & Reset**:
+  - **Export Theme Preset**: Save your appearance settings to a standalone `.json` preset.
+  - **Import Theme Preset**: Instantly restore or share visual themes across devices.
+  - **Reset Appearance**: Surgically reverts UI styles to default without altering any music files, playlists, favorites, or listening history.
+- **Responsive Expanded Player**:
+  - **Desktop Dual-Pane**: Player on the left and docked, independently scrollable Queue/Lyrics sidebar on the right. Toggling the sidebar smoothly adjusts the player width (`calc(100% - 380px)`) so the album art and controls remain centered.
+  - **Mobile Portrait Mode**: Full-width immersive player. The sidebar is hidden from the main view and opens on-demand as a native-feeling slide-up bottom sheet with blurred backdrop, safe-area inset support, and dedicated close button.
   - **Phone Landscape & Short Screen Layout**: Dual-column layout on short screens (`max-height: 580px`) placing artwork and visualizer on the left and metadata, seek bar, and playback controls on the right.
-  - **Full Secondary Controls**: Volume control with responsive slider and mute toggle, playback speed selector (0.5× to 2.0×), synchronized lyrics access, queue management, and fullscreen mode.
-- **Four Curated System Themes**: Dark Mode, Light Mode, AMOLED True Black, and Dynamic Custom Mode.
-- **Accent Color Palette**: Vibrant glows with custom hex picker.
-- **Dynamic Artwork Palette Extraction**: Automatically extracts dominant accent colors from album covers with memory caching.
-- **Custom Wallpaper**: Upload your own background photo with adjustable glassmorphic blur and dimming sliders.
+  - **Mini-Player Sub-Action Toolbar**: Dedicated Queue and Lyrics quick-action pills directly on the mini-player with a real-time track count badge. Opens the respective panel on-demand without interrupting audio playback.
+  - **Fluid Framed Artwork**: Preserves original cover aspect ratios with `object-fit: contain` / `cover` inside an elegant rounded frame—no center vinyl hole punching or unexpected cropping.
+  - **Full Secondary Controls**: Volume control with responsive slider and mute toggle, playback speed selector (0.5× to 2.0×), synchronized lyrics access, queue management with badge, and fullscreen mode.
 - **Multi-Mode Web Audio Visualizer**: 4 real-time visualization styles with Retina High-DPI scaling (`window.devicePixelRatio`), container-relative sizing, and automatic background suspension to save CPU/battery:
   1. *Frequency Bars*
   2. *Oscilloscope Waveform*

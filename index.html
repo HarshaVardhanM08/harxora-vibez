@@ -387,47 +387,140 @@
           </div>
         </div>
 
-        <!-- Theme -->
-        <div class="setting-card glass">
-          <h3>Theme</h3>
-          <p class="muted">Choose your preferred visual mode.</p>
-          <div class="theme-grid">
-            <button class="theme-pick" data-theme="dark">
-              <span class="swatch dark-sw"></span><span>Dark</span>
+        <!-- Appearance & Theme Presets Studio -->
+        <div class="setting-card glass" id="setting-theme-presets">
+          <div class="setting-header-flex">
+            <div>
+              <h3>Theme Presets</h3>
+              <p class="muted">Instant aesthetic themes with harmonized palettes, frosted glass surfaces, and illumination.</p>
+            </div>
+            <button class="btn-ghost small-btn" id="btn-reset-appearance" title="Reset all appearance to defaults">Reset Appearance</button>
+          </div>
+          <div class="theme-preset-grid" id="theme-preset-grid">
+            <button class="theme-card active" data-theme="midnight" aria-label="Theme: Midnight">
+              <div class="theme-preview preview-midnight">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Midnight</span>
+                <span class="theme-card-desc">Pure OLED dark, deep indigo accent, razor contrast</span>
+              </div>
             </button>
-            <button class="theme-pick" data-theme="light">
-              <span class="swatch light-sw"></span><span>Light</span>
+            <button class="theme-card" data-theme="neon" aria-label="Theme: Neon Cyber">
+              <div class="theme-preview preview-neon">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Neon Cyber</span>
+                <span class="theme-card-desc">Carbon slate, electric cyan and vivid magenta glow</span>
+              </div>
             </button>
-            <button class="theme-pick" data-theme="amoled">
-              <span class="swatch amoled-sw"></span><span>AMOLED</span>
+            <button class="theme-card" data-theme="glass" aria-label="Theme: Aero Glass">
+              <div class="theme-preview preview-glass-theme">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Aero Glass</span>
+                <span class="theme-card-desc">Frosted layered crystalline glass, refractive blur</span>
+              </div>
             </button>
-            <button class="theme-pick" data-theme="custom">
-              <span class="swatch custom-sw"></span><span>Custom</span>
+            <button class="theme-card" data-theme="minimal" aria-label="Theme: Nordic Minimal">
+              <div class="theme-preview preview-minimal-theme">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Nordic Minimal</span>
+                <span class="theme-card-desc">Flat monochrome charcoal, clean silver, no glows</span>
+              </div>
+            </button>
+            <button class="theme-card" data-theme="immersive" aria-label="Theme: Immersive">
+              <div class="theme-preview preview-immersive-theme">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Immersive</span>
+                <span class="theme-card-desc">Cosmic twilight gradient, radiant violet atmosphere</span>
+              </div>
+            </button>
+            <button class="theme-card" data-theme="aurora" aria-label="Theme: Aurora Borealis">
+              <div class="theme-preview preview-aurora">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Aurora</span>
+                <span class="theme-card-desc">Flowing northern lights, emerald jade & purple sheen</span>
+              </div>
+            </button>
+            <button class="theme-card" data-theme="light" aria-label="Theme: Daylight Light">
+              <div class="theme-preview preview-light">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Daylight</span>
+                <span class="theme-card-desc">Crisp porcelain, soft daylight shadows, royal blue</span>
+              </div>
+            </button>
+            <button class="theme-card" data-theme="classic" aria-label="Theme: Audiophile Classic">
+              <div class="theme-preview preview-classic-theme">
+                <div class="theme-preview-bar"></div>
+                <div class="theme-preview-pill"></div>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-card-title">Audiophile Classic</span>
+                <span class="theme-card-desc">Matte studio charcoal with warm brass amber trim</span>
+              </div>
             </button>
           </div>
         </div>
 
         <!-- Accent Color -->
-        <div class="setting-card glass">
+        <div class="setting-card glass" id="setting-accent-color">
           <h3>Accent Color</h3>
-          <p class="muted">Used for buttons, glowing disc accents, and active indicators.</p>
-          <div class="color-row">
-            <button class="color-dot" style="--c:#7c5cff" data-color="#7c5cff" title="Purple"></button>
-            <button class="color-dot" style="--c:#1db954" data-color="#1db954" title="Spotify Green"></button>
-            <button class="color-dot" style="--c:#ff3b6b" data-color="#ff3b6b" title="Pink"></button>
-            <button class="color-dot" style="--c:#00d4ff" data-color="#00d4ff" title="Cyan"></button>
-            <button class="color-dot" style="--c:#ffb01f" data-color="#ffb01f" title="Gold"></button>
-            <button class="color-dot" style="--c:#ff5e1f" data-color="#ff5e1f" title="Orange"></button>
+          <p class="muted">Customizes playback controls, disc glows, active tabs, and sliders.</p>
+          <div class="color-row" id="accent-color-row">
+            <button class="color-dot active" style="--c:#7c5cff" data-color="#7c5cff" title="Vibrant Purple"></button>
+            <button class="color-dot" style="--c:#00d4ff" data-color="#00d4ff" title="Electric Cyan"></button>
+            <button class="color-dot" style="--c:#ff3b6b" data-color="#ff3b6b" title="Hot Pink"></button>
+            <button class="color-dot" style="--c:#10b981" data-color="#10b981" title="Emerald Green"></button>
+            <button class="color-dot" style="--c:#f59e0b" data-color="#f59e0b" title="Amber Gold"></button>
+            <button class="color-dot" style="--c:#ef4444" data-color="#ef4444" title="Crimson Red"></button>
+            <button class="color-dot" style="--c:#a855f7" data-color="#a855f7" title="Neon Violet"></button>
+            <button class="color-dot" style="--c:#3b82f6" data-color="#3b82f6" title="Royal Blue"></button>
             <label class="color-dot custom-color" title="Custom color picker">
               <input type="color" id="custom-accent" value="#7c5cff">
             </label>
           </div>
         </div>
 
-        <!-- Custom Wallpaper -->
-        <div class="setting-card glass">
-          <h3>Wallpaper</h3>
-          <p class="muted">Upload your own background image. Dynamic colors are automatically extracted.</p>
+        <!-- Transparency & Glassmorphism -->
+        <div class="setting-card glass" id="setting-transparency-blur">
+          <h3>Transparency & Glassmorphism</h3>
+          <p class="muted">Fine-tune translucent glass panels, surface opacity, and backdrop blur strength.</p>
+          <label class="slider-row">
+            <span>Surface Opacity (<span id="surface-alpha-val">55%</span>)</span>
+            <input type="range" id="surface-alpha-slider" min="5" max="95" value="55" step="1">
+          </label>
+          <label class="slider-row">
+            <span>Glass Blur (<span id="blur-val">30px</span>)</span>
+            <input type="range" id="blur-slider" min="0" max="60" value="30">
+          </label>
+          <label class="slider-row">
+            <span>Background Dimming (<span id="dim-val">55%</span>)</span>
+            <input type="range" id="dim-slider" min="0" max="90" value="55">
+          </label>
+        </div>
+
+        <!-- Custom Wallpaper & Scope -->
+        <div class="setting-card glass" id="setting-wallpaper">
+          <h3>Background & Wallpaper</h3>
+          <p class="muted">Upload your custom wallpaper or pick curated textures. Configure visibility scope.</p>
           <div class="wallpaper-controls">
             <label class="btn-primary" style="cursor:pointer;">
               <input type="file" id="wallpaper-input" accept="image/*" hidden>
@@ -435,14 +528,19 @@
             </label>
             <button class="btn-ghost" id="wallpaper-clear">Remove</button>
           </div>
-          <label class="slider-row">
-            <span>Blur Intensity</span>
-            <input type="range" id="blur-slider" min="0" max="60" value="30">
-          </label>
-          <label class="slider-row">
-            <span>Background Dim</span>
-            <input type="range" id="dim-slider" min="0" max="90" value="55">
-          </label>
+          <div class="wallpaper-presets-row" id="wallpaper-presets" style="margin-top:10px;">
+            <button class="chip active" data-wp="none">Default</button>
+            <button class="chip" data-wp="aurora">Aurora Glow</button>
+            <button class="chip" data-wp="nebula">Cosmic Nebula</button>
+            <button class="chip" data-wp="mesh">Cyber Grid</button>
+          </div>
+          <div class="setting-sub-group" style="margin-top:14px;">
+            <span class="setting-sub-label">Wallpaper Visibility Scope:</span>
+            <div class="segmented-control" id="wallpaper-scope-control">
+              <button class="segment-btn active" data-scope="app">Whole App</button>
+              <button class="segment-btn" data-scope="player">Player Only</button>
+            </div>
+          </div>
         </div>
 
         <!-- Player Appearance Style -->
@@ -452,7 +550,10 @@
               <h3>Player Appearance</h3>
               <p class="muted">Customize the visual style of the mini-player and expanded player without affecting audio playback.</p>
             </div>
-            <button class="btn-ghost small-btn" id="btn-reset-player-style" title="Reset to default Glass style">Reset</button>
+            <label class="toggle-row inline-toggle" title="Match overall theme">
+              <span>Match Theme</span>
+              <input type="checkbox" id="player-match-theme-toggle" class="switch" checked>
+            </label>
           </div>
           <div class="player-style-grid" id="player-style-grid">
             <button class="player-style-card active" data-style="glass" aria-label="Style A: Glass">
@@ -509,6 +610,101 @@
                 <span class="style-desc">Solid dark matte background, traditional controls</span>
               </div>
             </button>
+          </div>
+        </div>
+
+        <!-- Layout Density & Card Radii -->
+        <div class="setting-card glass" id="setting-layout-density">
+          <h3>Layout & Interface Density</h3>
+          <p class="muted">Adjust spacing, corner smoothness, and thumbnail visibility.</p>
+          <div class="setting-sub-group">
+            <span class="setting-sub-label">Interface Density:</span>
+            <div class="segmented-control" id="density-control">
+              <button class="segment-btn active" data-density="comfortable">Comfortable</button>
+              <button class="segment-btn" data-density="compact">Compact</button>
+            </div>
+          </div>
+          <div class="setting-sub-group">
+            <span class="setting-sub-label">Card Corner Radius:</span>
+            <div class="segmented-control" id="radius-control">
+              <button class="segment-btn active" data-radius="rounded">Rounded (18px)</button>
+              <button class="segment-btn" data-radius="soft">Soft (10px)</button>
+              <button class="segment-btn" data-radius="sharp">Sharp (4px)</button>
+            </div>
+          </div>
+          <div class="setting-sub-group">
+            <span class="setting-sub-label">Home Grid Cards:</span>
+            <div class="segmented-control" id="grid-size-control">
+              <button class="segment-btn" data-grid="compact">Compact</button>
+              <button class="segment-btn active" data-grid="standard">Standard</button>
+              <button class="segment-btn" data-grid="large">Large</button>
+            </div>
+          </div>
+          <label class="toggle-row">
+            <span>Show Mini-Player Album Artwork</span>
+            <input type="checkbox" id="mini-art-toggle" checked class="switch">
+          </label>
+          <label class="toggle-row">
+            <span>Card Hover Glow Effect</span>
+            <input type="checkbox" id="card-glow-toggle" checked class="switch">
+          </label>
+        </div>
+
+        <!-- Typography & Font Scaling -->
+        <div class="setting-card glass" id="setting-typography">
+          <h3>Typography & Font Scaling</h3>
+          <p class="muted">Choose your preferred font family personality and UI font sizing.</p>
+          <div class="setting-sub-group">
+            <span class="setting-sub-label">Font Family Personality:</span>
+            <div class="segmented-control" id="font-family-control">
+              <button class="segment-btn active" data-font="modern">Modern Sans</button>
+              <button class="segment-btn" data-font="rounded">Clean Rounded</button>
+              <button class="segment-btn" data-font="tech">Geometric Tech</button>
+              <button class="segment-btn" data-font="mono">Mono Accent</button>
+            </div>
+          </div>
+          <div class="setting-sub-group">
+            <span class="setting-sub-label">Font Scale:</span>
+            <div class="segmented-control" id="font-scale-control">
+              <button class="segment-btn" data-scale="small">Small (92%)</button>
+              <button class="segment-btn active" data-scale="standard">Standard (100%)</button>
+              <button class="segment-btn" data-scale="large">Large (108%)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Motion & Visual Effects -->
+        <div class="setting-card glass" id="setting-motion-effects">
+          <h3>Motion & Visual Effects</h3>
+          <p class="muted">Customize transitions, ambient aura, and accessibility motion preferences.</p>
+          <div class="setting-sub-group">
+            <span class="setting-sub-label">Animation Intensity:</span>
+            <div class="segmented-control" id="anim-speed-control">
+              <button class="segment-btn active" data-speed="full">Full Motion</button>
+              <button class="segment-btn" data-speed="subtle">Subtle</button>
+              <button class="segment-btn" data-speed="off">Off</button>
+            </div>
+          </div>
+          <label class="toggle-row">
+            <span>Expanded Player Ambient Aura Glow</span>
+            <input type="checkbox" id="ambient-glow-toggle" checked class="switch">
+          </label>
+          <label class="toggle-row">
+            <span>Respect System Reduced Motion</span>
+            <input type="checkbox" id="reduced-motion-toggle" class="switch">
+          </label>
+        </div>
+
+        <!-- Appearance Preset Backup & Export -->
+        <div class="setting-card glass" id="setting-appearance-backup">
+          <h3>Appearance Preset Backup & Sharing</h3>
+          <p class="muted">Export your customized appearance theme as a standalone preset or import one from another device. Never alters your music files or playlists.</p>
+          <div class="wallpaper-controls">
+            <button class="btn-primary" id="btn-export-appearance">Export Theme Preset</button>
+            <label class="btn-ghost" style="cursor:pointer;">
+              <input type="file" id="appearance-file-input" accept=".json" hidden>
+              Import Theme Preset
+            </label>
           </div>
         </div>
 
@@ -651,32 +847,45 @@
 
   <!-- PERSISTENT MINI PLAYER -->
   <div class="mini-player glass" id="mini-player" role="region" aria-label="Mini audio player">
-    <div class="mini-art" id="mini-art" aria-hidden="true"></div>
-    <div class="mini-info" id="mini-info">
-      <div class="mini-title-wrap">
-        <span class="mini-title" id="mini-title"></span>
-        <span class="mini-time" id="mini-time"></span>
+    <div class="mini-main-content">
+      <div class="mini-art" id="mini-art" aria-hidden="true"></div>
+      <div class="mini-info" id="mini-info">
+        <div class="mini-title-wrap">
+          <span class="mini-title" id="mini-title"></span>
+          <span class="mini-time" id="mini-time"></span>
+        </div>
+        <div class="mini-artist" id="mini-artist"></div>
+        <div class="mini-progress" id="mini-progress" title="Seek" role="slider" aria-label="Seek progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="mini-progress-fill" id="mini-progress-fill"></div>
+        </div>
       </div>
-      <div class="mini-artist" id="mini-artist"></div>
-      <div class="mini-progress" id="mini-progress" title="Seek" role="slider" aria-label="Seek progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="mini-progress-fill" id="mini-progress-fill"></div>
+      <div class="mini-controls">
+        <button class="icon-btn mini-btn" id="mini-like" aria-label="Toggle favorite" title="Toggle favorite">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+        </button>
+        <button class="icon-btn" id="mini-prev" aria-label="Previous track" title="Previous track">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l10 6V6z"/></svg>
+        </button>
+        <button class="icon-btn play-btn" id="mini-play" aria-label="Play or pause" title="Play or pause">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="icon-btn" id="mini-next" aria-label="Next track" title="Next track">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16 6h2v12h-2zM4.5 18l10-6-10-6z"/></svg>
+        </button>
+        <button class="icon-btn expand-btn" id="expand-btn" aria-label="Expand player" title="Expand player">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 14l5-5 5 5"/></svg>
+        </button>
       </div>
     </div>
-    <div class="mini-controls">
-      <button class="icon-btn mini-btn" id="mini-like" aria-label="Toggle favorite" title="Toggle favorite">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+    <div class="mini-sub-actions" id="mini-sub-actions">
+      <button class="mini-action-pill" id="mini-queue-btn" aria-label="Open Queue" title="Queue">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h10"/></svg>
+        <span class="mini-pill-text">Queue</span>
+        <span class="mini-queue-badge" id="mini-queue-badge">0</span>
       </button>
-      <button class="icon-btn" id="mini-prev" aria-label="Previous track" title="Previous track">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l10 6V6z"/></svg>
-      </button>
-      <button class="icon-btn play-btn" id="mini-play" aria-label="Play or pause" title="Play or pause">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      </button>
-      <button class="icon-btn" id="mini-next" aria-label="Next track" title="Next track">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16 6h2v12h-2zM4.5 18l10-6-10-6z"/></svg>
-      </button>
-      <button class="icon-btn expand-btn" id="expand-btn" aria-label="Expand player" title="Expand player">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 14l5-5 5 5"/></svg>
+      <button class="mini-action-pill" id="mini-lyrics-btn" aria-label="Open Lyrics" title="Lyrics">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+        <span class="mini-pill-text">Lyrics</span>
       </button>
     </div>
   </div>
@@ -765,6 +974,10 @@
             <button class="icon-btn" id="lyrics-btn" title="Lyrics" aria-label="Toggle lyrics">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
             </button>
+            <button class="icon-btn" id="full-queue-bottom-btn" title="Queue" aria-label="Toggle queue">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h10"/></svg>
+              <span class="full-queue-badge" id="full-queue-count-badge">0</span>
+            </button>
             <button class="icon-btn" id="addqueue-btn" title="Add to playlist" aria-label="Add to playlist">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h13M4 12h13M4 18h9M19 15v6M16 18h6"/></svg>
             </button>
@@ -774,52 +987,52 @@
           </div>
         </div>
       </div>
-
-      <!-- Side panel: Queue & Synchronized Lyrics -->
-      <aside class="side-panel glass" id="side-panel" aria-label="Queue and Lyrics panel">
-        <div class="side-panel-header">
-          <div class="side-tabs" role="tablist">
-            <button class="side-tab active" data-side="queue" id="side-tab-queue" role="tab" aria-selected="true">Queue</button>
-            <button class="side-tab" data-side="lyrics" id="side-tab-lyrics" role="tab" aria-selected="false">Lyrics</button>
-          </div>
-          <button class="icon-btn side-panel-close" id="side-panel-close" aria-label="Close panel" title="Close panel">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-        
-        <!-- Queue View -->
-        <div class="side-content" id="side-queue" role="tabpanel" aria-labelledby="side-tab-queue">
-          <div class="queue-toolbar">
-            <div class="queue-stats-wrap">
-              <span id="queue-total-count" class="queue-count-badge">0 tracks</span>
-              <span id="queue-total-duration" class="muted" style="font-size:0.8rem;">0:00</span>
-            </div>
-            <button class="btn-ghost small-btn" id="btn-clear-queue">Clear Queue</button>
-          </div>
-          <div id="queue-list" class="queue-list-scroll"></div>
-        </div>
-
-        <!-- Lyrics View -->
-        <div class="side-content" id="side-lyrics" style="display:none" role="tabpanel" aria-labelledby="side-tab-lyrics">
-          <div class="lyrics-toolbar">
-            <div class="lyrics-sync-badge" id="lyrics-sync-badge">No Lyrics</div>
-            <div class="lyrics-actions">
-              <button class="btn-ghost small-btn" id="btn-import-lrc" title="Import .lrc or .txt file">Import File</button>
-              <button class="btn-ghost small-btn" id="btn-edit-lyrics" title="Type or paste lyrics">Edit Lyrics</button>
-            </div>
-          </div>
-          <div class="lyrics-scroll-area" id="lyrics-scroll-area">
-            <div class="lyrics-empty" id="lyrics-empty">
-              <p>🎵 No lyrics found for this song</p>
-              <small>Click <strong>Import File</strong> or <strong>Edit Lyrics</strong> to add synchronized LRC or text lyrics.</small>
-            </div>
-            <div class="lyrics-lines" id="lyrics-lines" style="display:none;"></div>
-          </div>
-        </div>
-      </aside>
-      <div class="side-panel-backdrop" id="side-panel-backdrop"></div>
     </div>
   </div>
+
+  <!-- Standalone Responsive Side panel: Queue & Synchronized Lyrics -->
+  <aside class="side-panel glass" id="side-panel" aria-label="Queue and Lyrics panel">
+    <div class="side-panel-header">
+      <div class="side-tabs" role="tablist">
+        <button class="side-tab active" data-side="queue" id="side-tab-queue" role="tab" aria-selected="true">Queue</button>
+        <button class="side-tab" data-side="lyrics" id="side-tab-lyrics" role="tab" aria-selected="false">Lyrics</button>
+      </div>
+      <button class="icon-btn side-panel-close" id="side-panel-close" aria-label="Close panel" title="Close panel">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    
+    <!-- Queue View -->
+    <div class="side-content" id="side-queue" role="tabpanel" aria-labelledby="side-tab-queue">
+      <div class="queue-toolbar">
+        <div class="queue-stats-wrap">
+          <span id="queue-total-count" class="queue-count-badge">0 tracks</span>
+          <span id="queue-total-duration" class="muted" style="font-size:0.8rem;">0:00</span>
+        </div>
+        <button class="btn-ghost small-btn" id="btn-clear-queue">Clear Queue</button>
+      </div>
+      <div id="queue-list" class="queue-list-scroll"></div>
+    </div>
+
+    <!-- Lyrics View -->
+    <div class="side-content" id="side-lyrics" style="display:none" role="tabpanel" aria-labelledby="side-tab-lyrics">
+      <div class="lyrics-toolbar">
+        <div class="lyrics-sync-badge" id="lyrics-sync-badge">No Lyrics</div>
+        <div class="lyrics-actions">
+          <button class="btn-ghost small-btn" id="btn-import-lrc" title="Import .lrc or .txt file">Import File</button>
+          <button class="btn-ghost small-btn" id="btn-edit-lyrics" title="Type or paste lyrics">Edit Lyrics</button>
+        </div>
+      </div>
+      <div class="lyrics-scroll-area" id="lyrics-scroll-area">
+        <div class="lyrics-empty" id="lyrics-empty">
+          <p>🎵 No lyrics found for this song</p>
+          <small>Click <strong>Import File</strong> or <strong>Edit Lyrics</strong> to add synchronized LRC or text lyrics.</small>
+        </div>
+        <div class="lyrics-lines" id="lyrics-lines" style="display:none;"></div>
+      </div>
+    </div>
+  </aside>
+  <div class="side-panel-backdrop" id="side-panel-backdrop"></div>
 
   <!-- Reusable Modal Dialog -->
   <div class="modal" id="modal" role="dialog" aria-modal="true">
