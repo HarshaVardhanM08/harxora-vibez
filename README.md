@@ -12,7 +12,7 @@
 
 ### 🎧 Audio Playback & Engine
 - **HTML5 Audio Engine**: Gapless-ready playback with accurate seek, volume, and playback speed control (0.5× to 2.0×).
-- **Lock-Screen & Headset Controls**: Full integration with the **Media Session API** for Android, iOS, Windows, and macOS control centers, Bluetooth headsets, and vehicle stereos with interactive play, pause, previous, next, and seek controls.
+- **Lock-Screen & Background Playback**: Full integration with the **Media Session API** with real-time `playbackState` synchronization (`playing`, `paused`, `none`), accurate duration/position tracking, comprehensive multi-resolution artwork (96×96 through 512×512), and lock-screen seek, previous, and next controls. Audio playback continues uninterrupted when the screen turns off or locks on supported devices.
 - **Queue System**: Real-time queue management with Now Playing, Up Next, and Played sections. Supports moving tracks up/down, clearing queue, and adding tracks to play next.
 - **Repeat & True Shuffle**: Repeat One, Repeat All, Repeat Off, and random queue shuffling.
 
@@ -41,16 +41,41 @@
 - **Top 5 Most Played**: Track ranking based on your playback count with instant one-click playback.
 - **Top Artists & Genre Breakdown**: Visual breakdown computed entirely offline from your personal collection.
 
-### 🎨 Visual Aesthetics & Themes
-- **Four Curated Themes**: Dark Mode, Light Mode, AMOLED True Black, and Dynamic Custom Mode.
+### 🎨 Visual Aesthetics, Themes & Player Styles
+- **Dedicated Player Appearance (6 Distinct Styles)**:
+  1. **Glass** *(Default)*: Translucent glassmorphic surfaces, subtle blur, fine borders, soft highlights.
+  2. **Immersive**: Cinematic backdrop with artwork-inspired gradients and radiant ambient glow.
+  3. **Minimal**: Flat solid dark aesthetic with clean typography and zero visual distractions.
+  4. **Transparent**: Ultra-sheer backdrop allowing wallpapers to show through while maintaining high-contrast controls.
+  5. **Dynamic Artwork**: Derives background gradients and accent colors directly from the active track's cover art in real time.
+  6. **Classic**: Grounded dark matte finish with familiar media player ergonomics.
+- **Redesigned Expanded Player**:
+  - **Fluid Framed Artwork**: Preserves original cover aspect ratios with `object-fit: contain` / `cover` inside an elegant rounded frame—no center vinyl hole punching or unexpected cropping.
+  - **Phone Landscape & Short Screen Layout**: Dual-column layout on short screens (`max-height: 580px`) placing artwork and visualizer on the left and metadata, seek bar, and playback controls on the right.
+  - **Full Secondary Controls**: Volume control with responsive slider and mute toggle, playback speed selector (0.5× to 2.0×), synchronized lyrics access, queue management, and fullscreen mode.
+- **Four Curated System Themes**: Dark Mode, Light Mode, AMOLED True Black, and Dynamic Custom Mode.
 - **Accent Color Palette**: Vibrant glows with custom hex picker.
-- **Dynamic Artwork Palette Extraction**: Automatically extracts dominant accent colors from album covers.
+- **Dynamic Artwork Palette Extraction**: Automatically extracts dominant accent colors from album covers with memory caching.
 - **Custom Wallpaper**: Upload your own background photo with adjustable glassmorphic blur and dimming sliders.
-- **Multi-Mode Web Audio Visualizer**: 4 real-time visualization styles:
+- **Multi-Mode Web Audio Visualizer**: 4 real-time visualization styles with Retina High-DPI scaling (`window.devicePixelRatio`), container-relative sizing, and automatic background suspension to save CPU/battery:
   1. *Frequency Bars*
   2. *Oscilloscope Waveform*
   3. *Radial Ring Pulse*
   4. *Minimal Bass Glow*
+
+### 📱 Responsive Layout & Mobile Ergonomics
+- **Safe-Area Inset Support**: Full integration with `env(safe-area-inset-bottom)`, `env(safe-area-inset-top)`, and horizontal insets for iPhones with Home Bar, notch, dynamic island, and gesture-bar Android phones.
+- **Collision-Free Bottom Navigation & Mini-Player**:
+  - Independent positioning layers: Mobile Bottom Nav (`z-index: 55`) and Mini-Player (`z-index: 50`) never collide or obscure controls.
+  - Clean initial inactive state: No ghost elements, no fake metadata, and no misleading `0:00 / 0:00` progress bar before playback begins.
+  - Dynamic body padding: Content automatically adapts to the presence or absence of the mini-player.
+  - Ellipsis text truncation prevents long song titles from crowding artwork, controls, or time labels.
+- **Unified Home-Page Card Grid**:
+  - Responsive CSS Grid across all 5 home sections: *Recently Played*, *Favorites*, *Your Playlists*, *Recently Added*, and *Suggested From Your Library*.
+  - Consistent 1:1 artwork aspect ratios and hover lift effects.
+  - Informative empty-state cards when a section has no tracks yet.
+- **Cross-Device Compatibility**: Seamlessly adapts across small phones (320×568), standard phones (375×667, 390×844), large phones (430×932), tablets (768×1024, 1024×768), laptops, desktops, and ultrawide displays (2560×1080).
+- **Reduced Motion Support**: Respects `@media (prefers-reduced-motion: reduce)` for users sensitive to animations.
 
 ### 📲 First-Class Mobile & Desktop PWA
 - **Installable Progressive Web App**: Compliant `manifest.json`, bundled PNG icons (192×192, 512×512, maskable), and a versioned cache-first Service Worker (`service-worker.js`).
