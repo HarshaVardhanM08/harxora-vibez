@@ -17,9 +17,12 @@
 - **Repeat & True Shuffle**: Repeat One, Repeat All, Repeat Off, and random queue shuffling.
 
 ### 💾 Offline-First Architecture & Storage
-- **IndexedDB Binary Storage**: Audio files are safely stored as binary Blobs inside `harxora-vibez-db`—independent of `localStorage` limits.
+- **IndexedDB Binary Storage**: Audio files are safely stored as binary Blobs inside `harxora-vibez-db`—independent of `localStorage` limits. Supports storing hundreds to thousands of audio tracks locally depending on available device storage.
+- **IndexedDB Max Storage & Persistence**:
+  - **Chromium / Edge / Brave**: Up to **60% to 80% of free disk space** can be allocated to IndexedDB (often tens or hundreds of gigabytes).
+  - **Safari (iOS / iPadOS / macOS)**: Starts with a default quota of ~1GB and requests incremental expansions as library size grows.
+  - **Persistent Storage API**: Request persistent storage (`navigator.storage.persist()`) directly from the Settings menu to prevent browsers from automatically evicting stored music when disk space is constrained.
 - **Storage Diagnostics & Quota Meter**: Inspect total tracks, MBs utilized, and available device storage quota in Settings and Statistics.
-- **Persistent Storage API**: Request persistent device storage (`navigator.storage.persist()`) to protect your offline collection from browser eviction.
 - **Legacy Migration**: Automatic, non-destructive migration from previous versions (`aurora-music` DB and `aurora-state-v1` localStorage).
 
 ### 🏷️ Local Metadata Extraction & Manual Editor
