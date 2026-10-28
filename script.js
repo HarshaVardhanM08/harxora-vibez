@@ -3107,6 +3107,10 @@ function stopVisualizer() {
   }
 }
 
+const VIZ_BAR_COUNT = 44;
+const vizSmoothed = new Float32Array(VIZ_BAR_COUNT);
+const vizPeaks = new Float32Array(VIZ_BAR_COUNT);
+
 function startVisualizer() {
   if (!State.settings.visualizer || !analyser || !State.isPlaying) {
     stopVisualizer();
@@ -3126,7 +3130,6 @@ function startVisualizer() {
   }
 
   const freqData = new Uint8Array(analyser.frequencyBinCount);
-  const timeData = new Uint8Array(analyser.fftSize);
   cancelAnimationFrame(vizRAF);
 
   const draw = () => {
@@ -3144,78 +3147,172 @@ function startVisualizer() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, logicalW, logicalH);
 
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c5cff';
-    const mode = State.settings.vizMode || 'bars';
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8b5cf6';
+    const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#06b6d4';
+    const mode = State.settings.vizMode || 'wave';
 
-    if (mode === 'wave') {
-      // Waveform Oscilloscope Mode
-      analyser.getByteTimeDomainData(timeData);
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = accent;
-      ctx.shadowColor = accent;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      const sliceWidth = logicalW / timeData.length;
-      let x = 0;
-      for (let i = 0; i < timeData.length; i++) {
-        const v = timeData[i] / 128.0;
-        const y = (v * logicalH) / 2;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-        x += sliceWidth;
+    analyser.getByteFrequencyData(freqData);
+
+    // Compute logarithmic frequency energy with psychoacoustic equal-loudness boost
+    const binCount = freqData.length;
+    for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+      const p = i / (VIZ_BAR_COUNT - 1);
+      const startBin = Math.floor(Math.pow(p, 2.0) * (binCount - 12));
+      const endBin = Math.max(startBin + 1, Math.floor(Math.pow((i + 1) / VIZ_BAR_COUNT, 2.0) * (binCount - 4)));
+      let sum = 0;
+      let count = 0;
+      for (let b = startBin; b <= endBin && b < binCount; b++) {
+        sum += freqData[b];
+        count++;
       }
-      ctx.stroke();
+      const rawAvg = count > 0 ? sum / count : 0;
+      const boost = 1.0 + Math.pow(p, 1.2) * 1.6;
+      const target = Math.min(1.0, Math.max(0.04, (rawAvg / 255.0) * boost));
+
+      // Physics damping: snappy attack, smooth gravity decay
+      if (target > vizSmoothed[i]) {
+        vizSmoothed[i] += (target - vizSmoothed[i]) * 0.42;
+      } else {
+        vizSmoothed[i] -= (vizSmoothed[i] - target) * 0.12;
+      }
+
+      // Floating peak caps
+      if (vizSmoothed[i] > vizPeaks[i]) {
+        vizPeaks[i] = vizSmoothed[i];
+      } else {
+        vizPeaks[i] = Math.max(0, vizPeaks[i] - 0.015);
+      }
+    }
+
+    if (mode === 'bars') {
+      // Modern Studio Rounded EQ Bars with floating peak caps
+      const barSpacing = Math.max(2, logicalW / (VIZ_BAR_COUNT * 4.5));
+      const totalSpacing = barSpacing * (VIZ_BAR_COUNT - 1);
+      const barWidth = Math.max(3, (logicalW - totalSpacing) / VIZ_BAR_COUNT);
+      const cornerRadius = Math.min(barWidth / 2, 4);
+
+      for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+        const val = vizSmoothed[i];
+        const barH = Math.max(4, val * (logicalH - 8));
+        const x = i * (barWidth + barSpacing);
+        const y = logicalH - barH;
+
+        const grad = ctx.createLinearGradient(0, logicalH, 0, y);
+        grad.addColorStop(0, accent + '40');
+        grad.addColorStop(0.6, accent);
+        grad.addColorStop(1, accent2);
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, barWidth, barH, [cornerRadius, cornerRadius, 1, 1]);
+        } else {
+          ctx.rect(x, y, barWidth, barH);
+        }
+        ctx.fill();
+
+        // Floating Peak Cap
+        const peakY = logicalH - Math.max(barH + 3, vizPeaks[i] * (logicalH - 8) + 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = accent2;
+        ctx.shadowBlur = 6;
+        ctx.fillRect(x, peakY, barWidth, 2);
+        ctx.shadowBlur = 0;
+      }
     } else if (mode === 'radial') {
-      // Circular Ring Pulse Mode
-      analyser.getByteFrequencyData(freqData);
-      const cx = logicalW / 2;
-      const cy = logicalH / 2;
-      const radius = Math.min(cx, cy) * 0.65;
-      const bars = 40;
-      const step = Math.floor(freqData.length / bars);
-      ctx.translate(cx, cy);
-      for (let i = 0; i < bars; i++) {
-        let v = 0;
-        for (let j = 0; j < step; j++) v += freqData[i * step + j];
-        v = v / step;
-        const barH = (v / 255) * (Math.min(cx, cy) * 0.45);
-        const rad = (i * 2 * Math.PI) / bars;
-        ctx.rotate(rad);
-        ctx.fillStyle = accent;
-        ctx.fillRect(-1.25, radius, 2.5, barH);
-        ctx.rotate(-rad);
+      // Symmetrical Horizon Spectrum
+      const mid = logicalW / 2;
+      const halfBars = Math.floor(VIZ_BAR_COUNT / 2);
+      const barW = Math.max(3, (mid / halfBars) - 2);
+
+      for (let i = 0; i < halfBars; i++) {
+        const val = vizSmoothed[i * 2];
+        const barH = Math.max(4, val * (logicalH - 6));
+        const xOffset = i * (barW + 2);
+        const y = (logicalH - barH) / 2;
+
+        const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+        grad.addColorStop(0, accent2);
+        grad.addColorStop(0.5, accent);
+        grad.addColorStop(1, accent2);
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(mid + xOffset, y, barW, barH, 3);
+          ctx.roundRect(mid - xOffset - barW, y, barW, barH, 3);
+        } else {
+          ctx.rect(mid + xOffset, y, barW, barH);
+          ctx.rect(mid - xOffset - barW, y, barW, barH);
+        }
+        ctx.fill();
       }
     } else if (mode === 'minimal') {
-      // Minimal Ambient Bass Glow
-      analyser.getByteFrequencyData(freqData);
+      // Dynamic Bass Glow Ambient Aura
       let bass = 0;
-      for (let i = 0; i < 10; i++) bass += freqData[i];
-      bass = bass / 10;
-      const alpha = Math.min(0.85, (bass / 255) * 0.95);
-      const grad = ctx.createLinearGradient(0, logicalH, 0, 0);
+      for (let i = 0; i < 8; i++) bass += vizSmoothed[i];
+      bass = bass / 8;
+      const alpha = Math.min(0.85, bass * 0.95);
+      const grad = ctx.createRadialGradient(logicalW / 2, logicalH / 2, 4, logicalW / 2, logicalH / 2, logicalW * 0.45);
       grad.addColorStop(0, accent + Math.round(alpha * 220).toString(16).padStart(2, '0'));
+      grad.addColorStop(0.7, accent2 + '18');
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, logicalW, logicalH);
     } else {
-      // Default Frequency Bars Mode
-      analyser.getByteFrequencyData(freqData);
-      const bars = 36;
-      const step = Math.floor(freqData.length / bars);
-      const bw = logicalW / bars;
-      for (let i = 0; i < bars; i++) {
-        let v = 0;
-        for (let j = 0; j < step; j++) v += freqData[i * step + j];
-        v = v / step;
-        const h = Math.max(2, (v / 255) * logicalH * 0.92);
-        const x = i * bw;
-        const grad = ctx.createLinearGradient(0, logicalH, 0, logicalH - h);
-        grad.addColorStop(0, accent + '22');
-        grad.addColorStop(1, accent);
-        ctx.fillStyle = grad;
-        ctx.fillRect(x + bw * 0.15, logicalH - h, bw * 0.7, h);
+      // Default: Fluid Neon Aurora Soundwave Curve
+      ctx.beginPath();
+      const points = [];
+      const stepX = logicalW / (VIZ_BAR_COUNT - 1);
+
+      for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+        const x = i * stepX;
+        const val = vizSmoothed[i];
+        const y = logicalH - Math.max(6, val * (logicalH - 10));
+        points.push({ x, y });
       }
+
+      ctx.moveTo(0, logicalH);
+      ctx.lineTo(points[0].x, points[0].y);
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i + 1];
+        const midX = (p0.x + p1.x) / 2;
+        const midY = (p0.y + p1.y) / 2;
+        ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx.lineTo(logicalW, logicalH);
+      ctx.closePath();
+
+      // Ambient liquid glow fill
+      const fillGrad = ctx.createLinearGradient(0, 0, 0, logicalH);
+      fillGrad.addColorStop(0, accent + '70');
+      fillGrad.addColorStop(0.5, accent2 + '30');
+      fillGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+
+      // Top glowing neon ribbon stroke
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i + 1];
+        const midX = (p0.x + p1.x) / 2;
+        const midY = (p0.y + p1.y) / 2;
+        ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx.lineWidth = 2.8;
+      ctx.strokeStyle = accent2;
+      ctx.shadowColor = accent2;
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
+
     ctx.restore();
   };
   draw();
@@ -3921,12 +4018,18 @@ function showAddMusicMenu() {
 
 /* ============== FULL PLAYER EXPANSION & SIDE PANELS ============== */
 function openQueuePanel() {
+  if (!$('#full-player').classList.contains('open')) {
+    openFull();
+  }
   switchSidePanel('queue');
   openSidePanel();
   renderQueue();
 }
 
 function openLyricsPanel() {
+  if (!$('#full-player').classList.contains('open')) {
+    openFull();
+  }
   switchSidePanel('lyrics');
   openSidePanel();
   if (State.currentSong) loadLyricsForSong(State.currentSong.id);
@@ -3937,9 +4040,6 @@ function openFull() {
   $('#full-player').classList.add('open');
   document.body.classList.add('full-player-active');
   updateFullPlayer();
-  if (window.innerWidth > 900) {
-    openSidePanel();
-  }
   renderQueue();
   loadLyricsForSong(State.currentSong.id);
   setTimeout(startVisualizer, 100);
