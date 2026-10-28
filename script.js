@@ -899,6 +899,8 @@ function emptyHomeCardHTML(iconSvg, title, subtitle) {
     </div>`;
 }
 
+const HOME_PREVIEW_LIMIT = 6;
+
 /* ----- Home Dashboard ----- */
 function renderHome() {
   // Greeting
@@ -915,80 +917,135 @@ function renderHome() {
       : 'Good night';
   $('#greeting').textContent = greet;
 
-  // Recently Played
+  // 1. Recently Played
   const recentRow = $('#recent-row');
-  const recents = State.recent
-    .map((id) => State.songs.find((s) => s.id === id))
-    .filter(Boolean)
-    .slice(0, 12);
-  if (recents.length) {
-    recentRow.innerHTML = recents.map((s) => songCardHTML(s)).join('');
-  } else {
-    recentRow.innerHTML = emptyHomeCardHTML(
-      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-      'No recent plays yet',
-      'Start playing any song from your library to build your history.'
-    );
+  if (recentRow) {
+    const recents = State.recent
+      .map((id) => State.songs.find((s) => s.id === id))
+      .filter(Boolean)
+      .slice(0, HOME_PREVIEW_LIMIT);
+    if (recents.length) {
+      recentRow.innerHTML = recents.map((s) => songCardHTML(s)).join('');
+    } else {
+      recentRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        'No recent plays yet',
+        'Start playing any song from your library to build your history.'
+      );
+    }
+    attachCardClicks(recentRow, 'song');
   }
-  attachCardClicks(recentRow, 'song');
 
-  // Favorites
+  // 2. Favorites
   const favRow = $('#fav-row');
-  const favs = State.favorites
-    .map((id) => State.songs.find((s) => s.id === id))
-    .filter(Boolean)
-    .slice(0, 12);
-  if (favs.length) {
-    favRow.innerHTML = favs.map((s) => songCardHTML(s)).join('');
-  } else {
-    favRow.innerHTML = emptyHomeCardHTML(
-      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>',
-      'No favorites saved',
-      'Click the heart icon on any song to save it to your favorites.'
-    );
+  if (favRow) {
+    const favs = State.favorites
+      .map((id) => State.songs.find((s) => s.id === id))
+      .filter(Boolean)
+      .slice(0, HOME_PREVIEW_LIMIT);
+    if (favs.length) {
+      favRow.innerHTML = favs.map((s) => songCardHTML(s)).join('');
+    } else {
+      favRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>',
+        'No favorites saved',
+        'Click the heart icon on any song to save it to your favorites.'
+      );
+    }
+    attachCardClicks(favRow, 'song');
   }
-  attachCardClicks(favRow, 'song');
 
-  // Playlists
+  // 3. Playlists
   const plRow = $('#playlists-row');
-  if (State.playlists.length) {
-    plRow.innerHTML = State.playlists.slice(0, 12).map((p) => playlistCardHTML(p)).join('');
-  } else {
-    plRow.innerHTML = emptyHomeCardHTML(
-      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h10M18 14v7M15 17l3-3 3 3"/></svg>',
-      'No custom playlists',
-      'Create your first playlist to organize songs by mood or genre.'
-    );
+  if (plRow) {
+    if (State.playlists.length) {
+      plRow.innerHTML = State.playlists.slice(0, HOME_PREVIEW_LIMIT).map((p) => playlistCardHTML(p)).join('');
+    } else {
+      plRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h10M18 14v7M15 17l3-3 3 3"/></svg>',
+        'No custom playlists',
+        'Create your first playlist to organize songs by mood or genre.'
+      );
+    }
+    attachCardClicks(plRow, 'playlist');
   }
-  attachCardClicks(plRow, 'playlist');
 
-  // Recently Added
+  // 4. Recently Added
   const addedRow = $('#recently-added-row');
-  const added = [...State.songs].sort((a, b) => b.addedAt - a.addedAt).slice(0, 12);
-  if (added.length) {
-    addedRow.innerHTML = added.map((s) => songCardHTML(s)).join('');
-  } else {
-    addedRow.innerHTML = emptyHomeCardHTML(
-      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>',
-      'Library is empty',
-      'Add songs or music folders using the Add Music button to begin.'
-    );
+  if (addedRow) {
+    const added = [...State.songs].sort((a, b) => b.addedAt - a.addedAt).slice(0, HOME_PREVIEW_LIMIT);
+    if (added.length) {
+      addedRow.innerHTML = added.map((s) => songCardHTML(s)).join('');
+    } else {
+      addedRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>',
+        'Library is empty',
+        'Add songs or music folders using the Add Music button to begin.'
+      );
+    }
+    attachCardClicks(addedRow, 'song');
   }
-  attachCardClicks(addedRow, 'song');
 
-  // Local Recommendations / Shuffle mix
-  const recRow = $('#recommended-row');
-  if (State.songs.length) {
-    const sample = [...State.songs].sort(() => Math.random() - 0.5).slice(0, 12);
-    recRow.innerHTML = sample.map((s) => songCardHTML(s)).join('');
-  } else {
-    recRow.innerHTML = emptyHomeCardHTML(
-      '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
-      'No suggestions yet',
-      'Import audio files to unlock personalized offline mixes.'
-    );
+  // 5. Albums
+  const albumsRow = $('#home-albums-row');
+  if (albumsRow) {
+    if (State.songs.length) {
+      const albumGroups = [...groupBy(State.songs, (s) => s.album || 'Unknown Album').entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(0, HOME_PREVIEW_LIMIT);
+      albumsRow.innerHTML = albumGroups.map(([album, songs]) => albumCardHTML(album, songs)).join('');
+    } else {
+      albumsRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>',
+        'No albums available',
+        'Add audio files with album metadata to see albums here.'
+      );
+    }
+    attachCardClicks(albumsRow, 'album');
   }
-  attachCardClicks(recRow, 'song');
+
+  // 6. Artists
+  const artistsRow = $('#home-artists-row');
+  if (artistsRow) {
+    if (State.songs.length) {
+      const artistMap = new Map();
+      State.songs.forEach((song) => {
+        splitArtists(song.artist).forEach((a) => {
+          if (!artistMap.has(a)) artistMap.set(a, []);
+          artistMap.get(a).push(song);
+        });
+      });
+      const artistGroups = [...artistMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(0, HOME_PREVIEW_LIMIT);
+      artistsRow.innerHTML = artistGroups.map(([artist, songs]) => artistCardHTML(artist, songs)).join('');
+    } else {
+      artistsRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>',
+        'No artists available',
+        'Artists from your imported music collection will appear here.'
+      );
+    }
+    attachCardClicks(artistsRow, 'artist');
+  }
+
+  // 7. Local Recommendations / Top Played
+  const recRow = $('#recommended-row');
+  if (recRow) {
+    if (State.songs.length) {
+      const topOrSample = [...State.songs]
+        .sort((a, b) => (b.playCount || 0) - (a.playCount || 0))
+        .slice(0, HOME_PREVIEW_LIMIT);
+      recRow.innerHTML = topOrSample.map((s) => songCardHTML(s)).join('');
+    } else {
+      recRow.innerHTML = emptyHomeCardHTML(
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        'No suggestions yet',
+        'Import audio files to unlock personalized offline mixes.'
+      );
+    }
+    attachCardClicks(recRow, 'song');
+  }
 }
 
 function songCardHTML(s) {
@@ -1449,6 +1506,39 @@ function openPlaylistDetail(id) {
   });
 }
 
+function openCollectionDetail(type) {
+  if (type === 'recent') {
+    const songs = State.recent
+      .map((id) => State.songs.find((s) => s.id === id))
+      .filter(Boolean);
+    showDetail({
+      kind: 'History Collection',
+      title: 'Recently Played',
+      sub: `${songs.length} track${songs.length !== 1 ? 's' : ''} in your listening history`,
+      art: songs.find((s) => s.art)?.art,
+      songs,
+    });
+  } else if (type === 'added') {
+    const songs = [...State.songs].sort((a, b) => b.addedAt - a.addedAt);
+    showDetail({
+      kind: 'Library Collection',
+      title: 'Recently Added',
+      sub: `${songs.length} track${songs.length !== 1 ? 's' : ''} in your offline library`,
+      art: songs.find((s) => s.art)?.art,
+      songs,
+    });
+  } else if (type === 'suggested') {
+    const songs = [...State.songs].sort((a, b) => (b.playCount || 0) - (a.playCount || 0));
+    showDetail({
+      kind: 'Algorithmic Mix',
+      title: 'Suggested Picks',
+      sub: `${songs.length} track${songs.length !== 1 ? 's' : ''} based on your offline play counts`,
+      art: songs.find((s) => s.art)?.art,
+      songs,
+    });
+  }
+}
+
 function showDetail(d) {
   currentDetail = d;
   $('#detail-kind').textContent = d.kind;
@@ -1644,7 +1734,14 @@ function showEditMetadataModal(id) {
 }
 
 /* ============== NAVIGATION & ROUTING ============== */
+let currentView = 'home';
+let previousView = 'home';
+
 function showView(view) {
+  if (view !== 'detail' && view !== currentView) {
+    previousView = currentView;
+  }
+  currentView = view;
   $$('.view').forEach((v) => v.classList.toggle('active', v.dataset.view === view));
   $$('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.view === view));
   $$('.bottom-nav-item').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
@@ -1657,7 +1754,10 @@ function showView(view) {
 }
 
 /* ============== PLAYBACK ENGINE ============== */
+let currentPlaySession = 0;
+
 async function playSong(id, queueIds, isShuffleIntent = false) {
+  const session = ++currentPlaySession;
   ensureAudioGraph();
   if (audioCtx?.state === 'suspended') audioCtx.resume();
 
@@ -1689,6 +1789,7 @@ async function playSong(id, queueIds, isShuffleIntent = false) {
   }
 
   const url = await getBlobUrl(song);
+  if (session !== currentPlaySession) return;
   if (!url) {
     toast('Audio data unavailable on device');
     return;
@@ -1701,8 +1802,10 @@ async function playSong(id, queueIds, isShuffleIntent = false) {
   try {
     await audio.play();
   } catch (e) {
+    if (session !== currentPlaySession) return;
     console.warn('Playback error or autoplay blocked', e);
   }
+  if (session !== currentPlaySession) return;
 
   State.currentSong = song;
   song.playCount = (song.playCount || 0) + 1;
@@ -1752,7 +1855,13 @@ function nextTrack(auto = false) {
   } else {
     if (State.repeat === 'all') {
       if (State.shuffle && State.originalQueue.length > 1) {
-        State.queue = fisherYatesShuffle(State.originalQueue);
+        const lastId = State.queue[State.queue.length - 1];
+        let newQueue = fisherYatesShuffle(State.originalQueue);
+        if (newQueue[0] === lastId && newQueue.length > 1) {
+          const swapIdx = Math.floor(Math.random() * (newQueue.length - 1)) + 1;
+          [newQueue[0], newQueue[swapIdx]] = [newQueue[swapIdx], newQueue[0]];
+        }
+        State.queue = newQueue;
         playQueueIndex(0);
       } else {
         playQueueIndex(0);
@@ -1891,6 +2000,29 @@ audio.addEventListener('loadedmetadata', () => {
     idbPut('meta', State.currentSong);
   }
   updateMediaSessionPosition();
+});
+
+audio.addEventListener('durationchange', () => {
+  if (audio.duration && !isNaN(audio.duration)) {
+    const totalEl = $('#time-total');
+    if (totalEl) totalEl.textContent = fmtTime(audio.duration);
+    updateProgress();
+  }
+});
+
+audio.addEventListener('error', () => {
+  const err = audio.error;
+  let msg = 'Failed to load audio track.';
+  if (err) {
+    if (err.code === 1) msg = 'Audio playback aborted.';
+    else if (err.code === 2) msg = 'Network error during audio playback.';
+    else if (err.code === 3) msg = 'Audio decoding failed (corrupted file).';
+    else if (err.code === 4) msg = 'Audio format not supported by browser.';
+  }
+  toast(msg);
+  State.isPlaying = false;
+  updatePlayButtons();
+  stopVisualizer();
 });
 
 function updatePlayButtons() {
@@ -2127,10 +2259,12 @@ async function playQueueIndex(qi) {
   const song = State.songs.find((s) => s.id === id);
   if (!song) return;
 
+  const session = ++currentPlaySession;
   ensureAudioGraph();
   if (audioCtx?.state === 'suspended') audioCtx.resume();
 
   const url = await getBlobUrl(song);
+  if (session !== currentPlaySession) return;
   if (!url) {
     toast('Audio file missing');
     return;
@@ -2144,8 +2278,10 @@ async function playQueueIndex(qi) {
   try {
     await audio.play();
   } catch (e) {
+    if (session !== currentPlaySession) return;
     console.warn('Play failed', e);
   }
+  if (session !== currentPlaySession) return;
 
   State.currentSong = song;
   song.playCount = (song.playCount || 0) + 1;
@@ -2387,7 +2523,12 @@ async function deleteSong(id) {
     State.songs = State.songs.filter((s) => s.id !== id);
     State.favorites = State.favorites.filter((x) => x !== id);
     State.recent = State.recent.filter((x) => x !== id);
-    State.playlists.forEach((p) => (p.songIds = p.songIds.filter((x) => x !== id)));
+    for (const p of State.playlists) {
+      if (p.songIds.includes(id)) {
+        p.songIds = p.songIds.filter((x) => x !== id);
+        await idbPut('playlists', p);
+      }
+    }
     State.queue = State.queue.filter((x) => x !== id);
 
     if (State.currentSong?.id === id) {
@@ -3212,6 +3353,21 @@ function bindEvents() {
   $$('.bottom-nav-item').forEach((b) => (b.onclick = () => showView(b.dataset.view)));
   $$('.link[data-goto]').forEach((b) => (b.onclick = () => showView(b.dataset.goto)));
 
+  // Dedicated See All Handlers for Home Screen
+  $$('.see-all-btn[data-see-all]').forEach((btn) => {
+    btn.onclick = () => {
+      const dest = btn.dataset.seeAll;
+      if (dest === 'recent') openCollectionDetail('recent');
+      else if (dest === 'favorites') showView('favorites');
+      else if (dest === 'playlists') showView('playlists');
+      else if (dest === 'added') openCollectionDetail('added');
+      else if (dest === 'albums') showView('albums');
+      else if (dest === 'artists') showView('artists');
+      else if (dest === 'suggested') openCollectionDetail('suggested');
+      else if (dest) showView(dest);
+    };
+  });
+
   // Add music triggers
   $('#add-music-btn').onclick = () => showAddMusicMenu();
   $('#add-music-btn-mobile').onclick = () => showAddMusicMenu();
@@ -3260,7 +3416,7 @@ function bindEvents() {
   };
 
   // Detail view back button
-  $('#detail-back').onclick = () => showView('songs');
+  $('#detail-back').onclick = () => showView(previousView || 'home');
 
   // Playlist creation
   $('#new-playlist-btn').onclick = newPlaylist;
@@ -3482,6 +3638,7 @@ function bindEvents() {
   $('#mini-next').onclick = () => nextTrack();
   $('#mini-like').onclick = () => State.currentSong && toggleFavorite(State.currentSong.id);
   $('#mini-progress').onclick = (e) => {
+    e.stopPropagation();
     if (!audio.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));

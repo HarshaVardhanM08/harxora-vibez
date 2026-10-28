@@ -137,8 +137,11 @@
       <!-- Continue / Recently Played -->
       <section class="row" id="section-recent">
         <div class="row-header">
-          <h2>Recently Played</h2>
-          <button class="link" data-goto="songs">See all</button>
+          <div class="row-title-wrap">
+            <h2>Recently Played</h2>
+            <p class="row-sub">Jump back into tracks you listened to recently</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="recent">See all</button>
         </div>
         <div class="cards-row cards-scroll" id="recent-row">
           <div class="empty-mini">No recent plays yet</div>
@@ -148,8 +151,11 @@
       <!-- Favorites -->
       <section class="row" id="section-favs">
         <div class="row-header">
-          <h2>Favorites</h2>
-          <button class="link" data-goto="favorites">See all</button>
+          <div class="row-title-wrap">
+            <h2>Favorites</h2>
+            <p class="row-sub">Your handpicked favorite tracks</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="favorites">See all</button>
         </div>
         <div class="cards-row cards-scroll" id="fav-row">
           <div class="empty-mini">Tap the heart on any song to add favorites</div>
@@ -159,8 +165,11 @@
       <!-- Playlists -->
       <section class="row" id="section-playlists">
         <div class="row-header">
-          <h2>Your Playlists</h2>
-          <button class="link" data-goto="playlists">See all</button>
+          <div class="row-title-wrap">
+            <h2>Your Playlists</h2>
+            <p class="row-sub">Custom mixtapes and collections</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="playlists">See all</button>
         </div>
         <div class="cards-row cards-scroll" id="playlists-row">
           <div class="empty-mini">Create custom playlists to organize your library</div>
@@ -170,17 +179,47 @@
       <!-- Recently Added -->
       <section class="row" id="section-recently-added">
         <div class="row-header">
-          <h2>Recently Added</h2>
-          <button class="link" data-goto="songs">View library</button>
+          <div class="row-title-wrap">
+            <h2>Recently Added</h2>
+            <p class="row-sub">Newest additions to your offline library</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="added">See all</button>
         </div>
         <div class="cards-row cards-scroll" id="recently-added-row"></div>
+      </section>
+
+      <!-- Albums -->
+      <section class="row" id="section-home-albums">
+        <div class="row-header">
+          <div class="row-title-wrap">
+            <h2>Albums</h2>
+            <p class="row-sub">Full albums curated from your local collection</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="albums">See all</button>
+        </div>
+        <div class="cards-row cards-scroll" id="home-albums-row"></div>
+      </section>
+
+      <!-- Artists -->
+      <section class="row" id="section-home-artists">
+        <div class="row-header">
+          <div class="row-title-wrap">
+            <h2>Artists</h2>
+            <p class="row-sub">Artists featured in your library</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="artists">See all</button>
+        </div>
+        <div class="cards-row cards-scroll" id="home-artists-row"></div>
       </section>
 
       <!-- Local Suggestions / Most Played -->
       <section class="row" id="section-recommended">
         <div class="row-header">
-          <h2>Suggested From Your Library</h2>
-          <button class="link" data-goto="songs">Explore library</button>
+          <div class="row-title-wrap">
+            <h2>Suggested For You</h2>
+            <p class="row-sub">Top tracks and algorithmic picks from your listening habits</p>
+          </div>
+          <button class="link see-all-btn" data-see-all="suggested">See all</button>
         </div>
         <div class="cards-row cards-scroll" id="recommended-row"></div>
       </section>

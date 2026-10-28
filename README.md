@@ -12,9 +12,17 @@
 
 ### 🎧 Audio Playback & Engine
 - **HTML5 Audio Engine**: Gapless-ready playback with accurate seek, volume, and playback speed control (0.5× to 2.0×).
+- **Session-Locked Playback Concurrency**: Protected by an asynchronous `currentPlaySession` token engine that discards stale promises during rapid clicking, preventing corrupted audio states or mismatched UI metadata.
+- **Resilient Audio Error & Duration Handling**: Native `error` and `durationchange` listeners detect corrupted files or unsupported formats with descriptive alerts and graceful state recovery.
 - **Lock-Screen & Background Playback**: Full integration with the **Media Session API** with real-time `playbackState` synchronization (`playing`, `paused`, `none`), accurate duration/position tracking, comprehensive multi-resolution artwork (96×96 through 512×512), and lock-screen seek, previous, and next controls. Audio playback continues uninterrupted when the screen turns off or locks on supported devices.
 - **Queue System**: Real-time queue management with Now Playing, Up Next, and Played sections. Supports moving tracks up/down, clearing queue, and adding tracks to play next.
-- **Repeat & True Shuffle**: Repeat One, Repeat All, Repeat Off, and random queue shuffling.
+- **Repeat & True Shuffle**: Repeat One, Repeat All, Repeat Off, and random queue shuffling with anti-repeat safeguards that prevent playing the same track twice on playlist loops.
+
+### 🏠 Responsive Home Screen & Collection Browsing
+- **7 Curated Home Sections**: Clean, grid-aligned previews for *Recently Played*, *Favorites*, *Your Playlists*, *Recently Added*, *Albums*, *Artists*, and *Suggested For You*.
+- **Performance Preview Bounds**: Standardized 6-card preview limit per section (`HOME_PREVIEW_LIMIT`) ensures instant initial rendering regardless of library size.
+- **Dedicated "See All" Views & Actions**: Every "See All" button routes to its dedicated full-collection view with "Play All" and "Shuffle" actions.
+- **Smart History Back Navigation**: Dynamic `previousView` state remembers the originating view (Home, Songs, Albums, Artists, Playlists) for seamless return navigation.
 
 ### 💾 Offline-First Architecture & Storage
 - **IndexedDB Binary Storage**: Audio files are safely stored as binary Blobs inside `harxora-vibez-db`—independent of `localStorage` limits. Supports storing hundreds to thousands of audio tracks locally depending on available device storage.
