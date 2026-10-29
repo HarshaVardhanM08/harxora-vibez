@@ -3,6 +3,7 @@
    Cache-first shell strategy for reliable offline playback
    ================================================================= */
 
+const CACHE_PREFIX = 'harxora-vibez-';
 const CACHE_NAME = 'harxora-vibez-v8';
 
 // Essential shell resources required to boot and run offline
@@ -24,16 +25,14 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activation: purge outdated caches and claim clients immediately
+// Activation: purge only outdated caches belonging specifically to Harxora Vibez
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        keys
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );

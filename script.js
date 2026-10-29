@@ -311,7 +311,8 @@ function updateMediaSession(song) {
       artwork.push({ src: song.art, sizes: '384x384', type: 'image/jpeg' });
       artwork.push({ src: song.art, sizes: '512x512', type: 'image/jpeg' });
     } else {
-      artwork.push({ src: 'assets/icons/neon-h-music-wave-icon.png', sizes: '512x512', type: 'image/png' });
+      const defaultIconUrl = new URL('assets/icons/neon-h-music-wave-icon.png', window.location.href).href;
+      artwork.push({ src: defaultIconUrl, sizes: '512x512', type: 'image/png' });
     }
 
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -1744,10 +1745,11 @@ function showEditMetadataModal(id) {
 }
 
 /* ============== NAVIGATION & ROUTING ============== */
+const VALID_VIEWS = ['home', 'songs', 'albums', 'artists', 'playlists', 'favorites', 'stats', 'settings', 'detail'];
 let currentView = 'home';
 let previousView = 'home';
 
-function showView(view) {
+function showView(view, pushState = true) {
   if (view !== 'detail' && view !== currentView) {
     previousView = currentView;
   }
@@ -1761,7 +1763,38 @@ function showView(view) {
   $('.sidebar-backdrop')?.classList.remove('show');
 
   if (view === 'stats') renderStatistics();
+
+  if (pushState && window.history?.pushState) {
+    try {
+      history.pushState({ view }, '', '#' + view);
+    } catch (e) {}
+  }
 }
+
+window.addEventListener('popstate', (e) => {
+  if ($('#modal')?.classList.contains('open')) {
+    closeModal();
+    return;
+  }
+  if ($('#meta-editor-modal')?.classList.contains('open')) {
+    $('#meta-editor-modal').classList.remove('open');
+    return;
+  }
+  if ($('#side-panel')?.classList.contains('open')) {
+    closeSidePanel();
+    return;
+  }
+  if ($('#full-player')?.classList.contains('open')) {
+    closeFull();
+    return;
+  }
+  const view = e.state?.view || window.location.hash.replace('#', '') || 'home';
+  if (view && VALID_VIEWS.includes(view)) {
+    showView(view, false);
+  } else {
+    showView('home', false);
+  }
+});
 
 /* ============== PLAYBACK ENGINE ============== */
 let currentPlaySession = 0;
@@ -3951,9 +3984,15 @@ function bindEvents() {
         $('#search-input')?.focus();
         break;
       case 'Escape':
-        if ($('#full-player').classList.contains('open')) closeFull();
-        if ($('#modal').classList.contains('open')) closeModal();
-        if ($('#meta-editor-modal').classList.contains('open')) $('#meta-editor-modal').classList.remove('open');
+        if ($('#modal')?.classList.contains('open')) {
+          closeModal();
+        } else if ($('#meta-editor-modal')?.classList.contains('open')) {
+          $('#meta-editor-modal').classList.remove('open');
+        } else if ($('#side-panel')?.classList.contains('open')) {
+          closeSidePanel();
+        } else if ($('#full-player')?.classList.contains('open')) {
+          closeFull();
+        }
         break;
     }
   });
@@ -4037,13 +4076,6 @@ function showAddMusicMenu() {
 
 /* ============== FULL PLAYER EXPANSION & SIDE PANELS ============== */
 function openQueuePanel() {
-  if (!State.currentSong) {
-    toast('Select a song to play');
-    return;
-  }
-  if (!$('#full-player').classList.contains('open')) {
-    openFull();
-  }
   switchSidePanel('queue');
   openSidePanel();
   renderQueue();
@@ -4053,9 +4085,6 @@ function openLyricsPanel() {
   if (!State.currentSong) {
     toast('Select a song to play');
     return;
-  }
-  if (!$('#full-player').classList.contains('open')) {
-    openFull();
   }
   switchSidePanel('lyrics');
   openSidePanel();
@@ -4105,7 +4134,8 @@ function switchSidePanel(which) {
 function openSidePanel() {
   $('#side-panel')?.classList.add('open');
   document.body.classList.add('side-panel-open');
-  if (window.innerWidth <= 900) {
+  // Show backdrop on mobile, or on desktop when full player is NOT covering the screen
+  if (window.innerWidth <= 900 || !document.body.classList.contains('full-player-active')) {
     $('#side-panel-backdrop')?.classList.add('show');
   } else {
     $('#side-panel-backdrop')?.classList.remove('show');

@@ -1026,52 +1026,52 @@
           </div>
         </div>
       </div>
-
-      <!-- Integrated Responsive Side panel: Queue & Synchronized Lyrics -->
-      <aside class="side-panel glass" id="side-panel" aria-label="Queue and Lyrics panel">
-        <div class="side-panel-header">
-          <div class="side-tabs" role="tablist">
-            <button class="side-tab active" data-side="queue" id="side-tab-queue" role="tab" aria-selected="true">Queue</button>
-            <button class="side-tab" data-side="lyrics" id="side-tab-lyrics" role="tab" aria-selected="false">Lyrics</button>
-          </div>
-          <button class="icon-btn side-panel-close" id="side-panel-close" aria-label="Close panel" title="Close panel">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-        
-        <!-- Queue View -->
-        <div class="side-content" id="side-queue" role="tabpanel" aria-labelledby="side-tab-queue">
-          <div class="queue-toolbar">
-            <div class="queue-stats-wrap">
-              <span id="queue-total-count" class="queue-count-badge">0 tracks</span>
-              <span id="queue-total-duration" class="muted" style="font-size:0.8rem;">0:00</span>
-            </div>
-            <button class="btn-ghost small-btn" id="btn-clear-queue">Clear Queue</button>
-          </div>
-          <div id="queue-list" class="queue-list-scroll"></div>
-        </div>
-
-        <!-- Lyrics View -->
-        <div class="side-content" id="side-lyrics" style="display:none" role="tabpanel" aria-labelledby="side-tab-lyrics">
-          <div class="lyrics-toolbar">
-            <div class="lyrics-sync-badge" id="lyrics-sync-badge">No Lyrics</div>
-            <div class="lyrics-actions">
-              <button class="btn-ghost small-btn" id="btn-import-lrc" title="Import .lrc or .txt file">Import File</button>
-              <button class="btn-ghost small-btn" id="btn-edit-lyrics" title="Type or paste lyrics">Edit Lyrics</button>
-            </div>
-          </div>
-          <div class="lyrics-scroll-area" id="lyrics-scroll-area">
-            <div class="lyrics-empty" id="lyrics-empty">
-              <p>🎵 No lyrics found for this song</p>
-              <small>Click <strong>Import File</strong> or <strong>Edit Lyrics</strong> to add synchronized LRC or text lyrics.</small>
-            </div>
-            <div class="lyrics-lines" id="lyrics-lines" style="display:none;"></div>
-          </div>
-        </div>
-      </aside>
-      <div class="side-panel-backdrop" id="side-panel-backdrop"></div>
     </div>
   </div>
+
+  <!-- Integrated Responsive Side panel: Queue & Synchronized Lyrics -->
+  <aside class="side-panel glass" id="side-panel" aria-label="Queue and Lyrics panel">
+    <div class="side-panel-header">
+      <div class="side-tabs" role="tablist">
+        <button class="side-tab active" data-side="queue" id="side-tab-queue" role="tab" aria-selected="true">Queue</button>
+        <button class="side-tab" data-side="lyrics" id="side-tab-lyrics" role="tab" aria-selected="false">Lyrics</button>
+      </div>
+      <button class="icon-btn side-panel-close" id="side-panel-close" aria-label="Close panel" title="Close panel">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    
+    <!-- Queue View -->
+    <div class="side-content" id="side-queue" role="tabpanel" aria-labelledby="side-tab-queue">
+      <div class="queue-toolbar">
+        <div class="queue-stats-wrap">
+          <span id="queue-total-count" class="queue-count-badge">0 tracks</span>
+          <span id="queue-total-duration" class="muted" style="font-size:0.8rem;">0:00</span>
+        </div>
+        <button class="btn-ghost small-btn" id="btn-clear-queue">Clear Queue</button>
+      </div>
+      <div id="queue-list" class="queue-list-scroll"></div>
+    </div>
+
+    <!-- Lyrics View -->
+    <div class="side-content" id="side-lyrics" style="display:none" role="tabpanel" aria-labelledby="side-tab-lyrics">
+      <div class="lyrics-toolbar">
+        <div class="lyrics-sync-badge" id="lyrics-sync-badge">No Lyrics</div>
+        <div class="lyrics-actions">
+          <button class="btn-ghost small-btn" id="btn-import-lrc" title="Import .lrc or .txt file">Import File</button>
+          <button class="btn-ghost small-btn" id="btn-edit-lyrics" title="Type or paste lyrics">Edit Lyrics</button>
+        </div>
+      </div>
+      <div class="lyrics-scroll-area" id="lyrics-scroll-area">
+        <div class="lyrics-empty" id="lyrics-empty">
+          <p>🎵 No lyrics found for this song</p>
+          <small>Click <strong>Import File</strong> or <strong>Edit Lyrics</strong> to add synchronized LRC or text lyrics.</small>
+        </div>
+        <div class="lyrics-lines" id="lyrics-lines" style="display:none;"></div>
+      </div>
+    </div>
+  </aside>
+  <div class="side-panel-backdrop" id="side-panel-backdrop"></div>
 
   <!-- Reusable Modal Dialog -->
   <div class="modal" id="modal" role="dialog" aria-modal="true">
