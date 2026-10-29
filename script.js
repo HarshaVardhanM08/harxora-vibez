@@ -3785,9 +3785,20 @@ function bindEvents() {
   };
   $('#mini-player').onclick = (e) => {
     if (e.target.closest('button') || e.target.closest('#mini-progress') || e.target.closest('#mini-sub-actions')) return;
-    openFull();
+    if ($('#full-player').classList.contains('open')) {
+      $('.full-main')?.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      openFull();
+    }
   };
-  $('#expand-btn').onclick = openFull;
+  $('#expand-btn').onclick = (e) => {
+    e.stopPropagation();
+    if ($('#full-player').classList.contains('open')) {
+      closeFull();
+    } else {
+      openFull();
+    }
+  };
 
   // Mini Player Sub-actions (Queue & Lyrics)
   const miniQueueBtn = $('#mini-queue-btn');
@@ -3811,7 +3822,9 @@ function bindEvents() {
   $('#like-btn').onclick = () => State.currentSong && toggleFavorite(State.currentSong.id);
   $('#addqueue-btn').onclick = () => State.currentSong && showAddToPlaylist(State.currentSong.id);
   $('#fullscreen-btn').onclick = toggleFullscreen;
-  $('#lyrics-btn').onclick = () => {
+
+  const toggleLyricsHandler = (e) => {
+    e?.stopPropagation();
     const isLyricsActive = $('#side-panel')?.classList.contains('open') && $('#side-lyrics')?.style.display !== 'none';
     if (isLyricsActive) {
       closeSidePanel();
@@ -3819,18 +3832,10 @@ function bindEvents() {
       openLyricsPanel();
     }
   };
-  const fullQueueBottomBtn = $('#full-queue-bottom-btn');
-  if (fullQueueBottomBtn) {
-    fullQueueBottomBtn.onclick = () => {
-      const isQueueActive = $('#side-panel')?.classList.contains('open') && $('#side-queue')?.style.display !== 'none';
-      if (isQueueActive) {
-        closeSidePanel();
-      } else {
-        openQueuePanel();
-      }
-    };
-  }
-  $('#full-queue-btn').onclick = () => {
+  $('#lyrics-btn').onclick = toggleLyricsHandler;
+
+  const toggleQueueHandler = (e) => {
+    e?.stopPropagation();
     const isQueueActive = $('#side-panel')?.classList.contains('open') && $('#side-queue')?.style.display !== 'none';
     if (isQueueActive) {
       closeSidePanel();
@@ -3838,6 +3843,9 @@ function bindEvents() {
       openQueuePanel();
     }
   };
+  const fullQueueBottomBtn = $('#full-queue-bottom-btn');
+  if (fullQueueBottomBtn) fullQueueBottomBtn.onclick = toggleQueueHandler;
+  $('#full-queue-btn').onclick = toggleQueueHandler;
 
   $('#seek').oninput = (e) => {
     if (audio.duration) {
@@ -3926,6 +3934,17 @@ function bindEvents() {
   });
   $('#modal').addEventListener('click', (e) => {
     if (e.target.id === 'modal') closeModal();
+  });
+
+  // Responsive dynamic adaptation on window resize
+  window.addEventListener('resize', () => {
+    if (document.body.classList.contains('side-panel-open')) {
+      if (window.innerWidth <= 900 || !document.body.classList.contains('full-player-active')) {
+        $('#side-panel-backdrop')?.classList.add('show');
+      } else {
+        $('#side-panel-backdrop')?.classList.remove('show');
+      }
+    }
   });
 
   // Keyboard Shortcuts
@@ -4098,6 +4117,7 @@ function openFull() {
   updateFullPlayer();
   renderQueue();
   loadLyricsForSong(State.currentSong.id);
+  $('.full-main')?.scrollTo({ top: 0, behavior: 'instant' });
 
   // On wide screens (> 900px), dock side panel with Queue by default; on mobile portrait, keep closed as on-demand sheet
   if (window.innerWidth > 900) {

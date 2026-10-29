@@ -4,7 +4,7 @@
    ================================================================= */
 
 const CACHE_PREFIX = 'harxora-vibez-';
-const CACHE_NAME = 'harxora-vibez-v8';
+const CACHE_NAME = 'harxora-vibez-v9';
 
 // Essential shell resources required to boot and run offline
 const SHELL_ASSETS = [
