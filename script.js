@@ -3112,9 +3112,12 @@ const vizSmoothed = new Float32Array(VIZ_BAR_COUNT);
 const vizPeaks = new Float32Array(VIZ_BAR_COUNT);
 
 function startVisualizer() {
-  if (!State.settings.visualizer || !analyser || !State.isPlaying) {
+  if (!State.settings.visualizer || !State.isPlaying) {
     stopVisualizer();
     return;
+  }
+  if (audioCtx && audioCtx.state === 'suspended' && State.isPlaying) {
+    audioCtx.resume().catch(() => {});
   }
   const canvas = $('#visualizer');
   if (!canvas) return;
@@ -3129,7 +3132,8 @@ function startVisualizer() {
     vizResizeObserver.observe(canvas.parentElement);
   }
 
-  const freqData = new Uint8Array(analyser.frequencyBinCount);
+  const binCount = analyser ? analyser.frequencyBinCount : 128;
+  const freqData = new Uint8Array(binCount);
   cancelAnimationFrame(vizRAF);
 
   const draw = () => {
@@ -3151,7 +3155,30 @@ function startVisualizer() {
     const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#06b6d4';
     const mode = State.settings.vizMode || 'wave';
 
-    analyser.getByteFrequencyData(freqData);
+    let hasSignal = false;
+    if (analyser) {
+      analyser.getByteFrequencyData(freqData);
+      for (let b = 0; b < binCount; b += 4) {
+        if (freqData[b] > 0) {
+          hasSignal = true;
+          break;
+        }
+      }
+    }
+
+    // Dynamic music-synced fallback if Web Audio is unpiped, blocked, or silent
+    if (!hasSignal && State.isPlaying) {
+      const t = audio.currentTime || (performance.now() / 1000);
+      for (let b = 0; b < binCount; b++) {
+        const normB = b / binCount;
+        const kick = Math.pow(Math.max(0, Math.sin(t * 3.4)), 4) * 0.9;
+        const bass = (Math.sin(t * 6.5 + normB * 3.0) * 0.5 + 0.5) * (1 - normB * 0.7);
+        const mid = (Math.sin(t * 13.0 + normB * 8.0) * 0.35 + 0.35) * (1 - Math.abs(normB - 0.45));
+        const treble = (Math.sin(t * 24.0 + normB * 16.0) * 0.25 + 0.25) * normB;
+        const energy = Math.min(1.0, (kick * 0.4 + bass * 0.45 + mid * 0.35 + treble * 0.25));
+        freqData[b] = Math.min(255, Math.floor(energy * 240));
+      }
+    }
 
     // Compute logarithmic frequency energy with psychoacoustic equal-loudness boost
     const binCount = freqData.length;
@@ -3771,7 +3798,8 @@ function bindEvents() {
   $('#addqueue-btn').onclick = () => State.currentSong && showAddToPlaylist(State.currentSong.id);
   $('#fullscreen-btn').onclick = toggleFullscreen;
   $('#lyrics-btn').onclick = () => {
-    if ($('#side-panel').classList.contains('open') && $('#side-lyrics').style.display !== 'none') {
+    const isLyricsActive = $('#side-panel')?.classList.contains('open') && $('#side-lyrics')?.style.display !== 'none';
+    if (isLyricsActive) {
       closeSidePanel();
     } else {
       openLyricsPanel();
@@ -3780,7 +3808,8 @@ function bindEvents() {
   const fullQueueBottomBtn = $('#full-queue-bottom-btn');
   if (fullQueueBottomBtn) {
     fullQueueBottomBtn.onclick = () => {
-      if ($('#side-panel').classList.contains('open') && $('#side-queue').style.display !== 'none') {
+      const isQueueActive = $('#side-panel')?.classList.contains('open') && $('#side-queue')?.style.display !== 'none';
+      if (isQueueActive) {
         closeSidePanel();
       } else {
         openQueuePanel();
@@ -3788,7 +3817,8 @@ function bindEvents() {
     };
   }
   $('#full-queue-btn').onclick = () => {
-    if ($('#side-panel').classList.contains('open')) {
+    const isQueueActive = $('#side-panel')?.classList.contains('open') && $('#side-queue')?.style.display !== 'none';
+    if (isQueueActive) {
       closeSidePanel();
     } else {
       openQueuePanel();
@@ -3825,7 +3855,15 @@ function bindEvents() {
 
   // Side Panel Tabs (Queue vs Lyrics)
   $$('.side-tab').forEach((t) => {
-    t.onclick = () => switchSidePanel(t.dataset.side);
+    t.onclick = () => {
+      const side = t.dataset.side;
+      switchSidePanel(side);
+      if (side === 'queue') {
+        renderQueue();
+      } else if (side === 'lyrics' && State.currentSong) {
+        loadLyricsForSong(State.currentSong.id);
+      }
+    };
   });
   $('#btn-clear-queue').onclick = clearQueue;
   $('#btn-import-lrc').onclick = () => $('#lyrics-file-input').click();
@@ -4018,6 +4056,10 @@ function showAddMusicMenu() {
 
 /* ============== FULL PLAYER EXPANSION & SIDE PANELS ============== */
 function openQueuePanel() {
+  if (!State.currentSong) {
+    toast('Select a song to play');
+    return;
+  }
   if (!$('#full-player').classList.contains('open')) {
     openFull();
   }
@@ -4027,12 +4069,16 @@ function openQueuePanel() {
 }
 
 function openLyricsPanel() {
+  if (!State.currentSong) {
+    toast('Select a song to play');
+    return;
+  }
   if (!$('#full-player').classList.contains('open')) {
     openFull();
   }
   switchSidePanel('lyrics');
   openSidePanel();
-  if (State.currentSong) loadLyricsForSong(State.currentSong.id);
+  loadLyricsForSong(State.currentSong.id);
 }
 
 function openFull() {
@@ -4042,6 +4088,18 @@ function openFull() {
   updateFullPlayer();
   renderQueue();
   loadLyricsForSong(State.currentSong.id);
+
+  // On wide screens (> 900px), dock side panel with Queue by default; on mobile portrait, keep closed as on-demand sheet
+  if (window.innerWidth > 900) {
+    $('#side-panel')?.classList.add('open');
+    document.body.classList.add('side-panel-open');
+    switchSidePanel('queue');
+  } else {
+    $('#side-panel')?.classList.remove('open');
+    document.body.classList.remove('side-panel-open');
+    $('#side-panel-backdrop')?.classList.remove('show');
+  }
+
   setTimeout(startVisualizer, 100);
 }
 
@@ -4066,7 +4124,9 @@ function switchSidePanel(which) {
 function openSidePanel() {
   $('#side-panel')?.classList.add('open');
   document.body.classList.add('side-panel-open');
-  $('#side-panel-backdrop')?.classList.add('show');
+  if (window.innerWidth <= 900) {
+    $('#side-panel-backdrop')?.classList.add('show');
+  }
 }
 
 function closeSidePanel() {

@@ -95,17 +95,19 @@
   - **Import Theme Preset**: Instantly restore or share visual themes across devices.
   - **Reset Appearance**: Surgically reverts UI styles to default without altering any music files, playlists, favorites, or listening history.
 - **Responsive Expanded Player**:
-  - **Desktop Dual-Pane**: Player on the left and docked, independently scrollable Queue/Lyrics sidebar on the right. Toggling the sidebar smoothly adjusts the player width (`calc(100% - 380px)`) so the album art and controls remain centered.
-  - **Mobile Portrait Mode**: Full-width immersive player. The sidebar is hidden from the main view and opens on-demand as a native-feeling slide-up bottom sheet with blurred backdrop, safe-area inset support, and dedicated close button.
+  - **Desktop Dual-Pane**: Player on the left and docked, independently scrollable Queue/Lyrics sidebar on the right. Side panel docks seamlessly within the player frame with zero backdrop obstruction, allowing full continuous playback control.
+  - **Mobile Portrait Mode**: Full-width immersive player. The Queue and Lyrics panels open on-demand as responsive slide-up bottom sheets with correct z-index elevation, safe-area inset support, and dedicated close controls.
   - **Phone Landscape & Short Screen Layout**: Dual-column layout on short screens (`max-height: 580px`) placing artwork and visualizer on the left and metadata, seek bar, and playback controls on the right.
-  - **Mini-Player Sub-Action Toolbar**: Dedicated Queue and Lyrics quick-action pills directly on the mini-player with a real-time track count badge. Opens the respective panel on-demand without interrupting audio playback.
-  - **Fluid Framed Artwork**: Preserves original cover aspect ratios with `object-fit: contain` / `cover` inside an elegant rounded frame—no center vinyl hole punching or unexpected cropping.
+  - **Streamlined Floating Mini-Player**: Sleek, distraction-free floating dock bar displaying square album artwork, song title, artist, favorite like button, track navigation, synchronized play/pause, and an interactive micro seek line. Queue and Lyrics remain tucked away until the mini-player is tapped, preventing screen clutter.
+  - **Aspect Ratio & Geometry Standards**:
+    - **Home Screen**: Strict 1:1 square artwork ratios (`aspect-ratio: 1 / 1`) for all album covers, playlists, recently played, and circular 1:1 artist avatars across compact, standard, and large grid modes.
+    - **Settings Studio**: Unified 16:9 widescreen ratio (`aspect-ratio: 16 / 9`) for theme presets and player appearance cards, with clean full-width slider rows and balanced segmented controls.
   - **Full Secondary Controls**: Volume control with responsive slider and mute toggle, playback speed selector (0.5× to 2.0×), synchronized lyrics access, queue management with badge, and fullscreen mode.
-- **Multi-Mode Web Audio Visualizer**: 4 real-time visualization styles with Retina High-DPI scaling (`window.devicePixelRatio`), container-relative sizing, and automatic background suspension to save CPU/battery:
-  1. *Frequency Bars*
-  2. *Oscilloscope Waveform*
-  3. *Radial Ring Pulse*
-  4. *Minimal Bass Glow*
+- **Resilient Multi-Mode Audio Visualizer**: 4 real-time visualization styles with Retina High-DPI scaling (`window.devicePixelRatio`), container-relative sizing, psychoacoustic logarithmic frequency weighting, and dynamic music-synced harmonic fallback that keeps the canvas vibrantly alive even when native Web Audio streams are unpiped or suspended:
+  1. *Studio Rounded EQ Bars* (with floating peak hold caps)
+  2. *Fluid Neon Aurora Soundwave* (quadratic spline Bezier curve)
+  3. *Symmetrical Horizon Spectrum*
+  4. *Dynamic Ambient Bass Aura*
 
 ### 📱 Responsive Layout & Mobile Ergonomics
 - **Safe-Area Inset Support**: Full integration with `env(safe-area-inset-bottom)`, `env(safe-area-inset-top)`, and horizontal insets for iPhones with Home Bar, notch, dynamic island, and gesture-bar Android phones.
