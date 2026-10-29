@@ -254,14 +254,24 @@ function loadPersistedState() {
 }
 
 /* ============== AUDIO ENGINE & MEDIA SESSION ============== */
-const audio = new Audio();
-audio.preload = 'metadata';
+const audio = document.getElementById('audio') || new Audio();
+audio.preload = 'auto';
+audio.setAttribute('playsinline', '');
+audio.setAttribute('webkit-playsinline', '');
+
 let audioCtx = null;
 let analyser = null;
 let sourceNode = null;
 let vizRAF = null;
 
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 function ensureAudioGraph() {
+  // On iOS devices, routing audio through Web Audio (createMediaElementSource) forces
+  // the audio context into suspension when the device is locked or user switches apps.
+  // We keep audio on the native HTML5 pipeline on iOS for uninterrupted background playback.
+  if (isIOS) return;
   if (audioCtx) return;
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2131,7 +2141,10 @@ function renderQueue() {
   const miniBadge = $('#mini-queue-badge');
   if (miniBadge) miniBadge.textContent = String(State.queue.length);
   const fullBadge = $('#full-queue-count-badge');
-  if (fullBadge) fullBadge.textContent = String(State.queue.length);
+  if (fullBadge) {
+    fullBadge.textContent = String(State.queue.length);
+    fullBadge.style.display = State.queue.length > 0 ? 'inline-block' : 'none';
+  }
 
   const totalSecs = State.queue.reduce((acc, qid) => {
     const s = State.songs.find((x) => x.id === qid);
@@ -3107,7 +3120,7 @@ function stopVisualizer() {
   }
 }
 
-const VIZ_BAR_COUNT = 44;
+const VIZ_BAR_COUNT = 32;
 const vizSmoothed = new Float32Array(VIZ_BAR_COUNT);
 const vizPeaks = new Float32Array(VIZ_BAR_COUNT);
 
@@ -3152,8 +3165,8 @@ function startVisualizer() {
     ctx.clearRect(0, 0, logicalW, logicalH);
 
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8b5cf6';
-    const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#06b6d4';
-    const mode = State.settings.vizMode || 'wave';
+    const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim() || '139, 92, 246';
+    const mode = State.settings.vizMode || 'bars';
 
     let hasSignal = false;
     if (analyser) {
@@ -3166,108 +3179,85 @@ function startVisualizer() {
       }
     }
 
-    // Dynamic music-synced fallback if Web Audio is unpiped, blocked, or silent
+    // Dynamic music-synced harmonic synthesizer fallback (runs smoothly on iOS & unpiped audio)
     if (!hasSignal && State.isPlaying) {
       const t = audio.currentTime || (performance.now() / 1000);
       for (let b = 0; b < binCount; b++) {
         const normB = b / binCount;
-        const kick = Math.pow(Math.max(0, Math.sin(t * 3.4)), 4) * 0.9;
-        const bass = (Math.sin(t * 6.5 + normB * 3.0) * 0.5 + 0.5) * (1 - normB * 0.7);
-        const mid = (Math.sin(t * 13.0 + normB * 8.0) * 0.35 + 0.35) * (1 - Math.abs(normB - 0.45));
-        const treble = (Math.sin(t * 24.0 + normB * 16.0) * 0.25 + 0.25) * normB;
-        const energy = Math.min(1.0, (kick * 0.4 + bass * 0.45 + mid * 0.35 + treble * 0.25));
-        freqData[b] = Math.min(255, Math.floor(energy * 240));
+        const kick = Math.pow(Math.max(0, Math.sin(t * 3.2)), 4) * 0.85;
+        const bass = (Math.sin(t * 5.8 + normB * 2.8) * 0.5 + 0.5) * (1 - normB * 0.65);
+        const mid = (Math.sin(t * 11.5 + normB * 7.5) * 0.35 + 0.35) * (1 - Math.abs(normB - 0.45));
+        const treble = (Math.sin(t * 22.0 + normB * 14.0) * 0.25 + 0.25) * normB;
+        const energy = Math.min(1.0, (kick * 0.45 + bass * 0.42 + mid * 0.32 + treble * 0.22));
+        freqData[b] = Math.min(255, Math.floor(energy * 230));
       }
     }
 
-    // Compute logarithmic frequency energy with psychoacoustic equal-loudness boost
-    const binCount = freqData.length;
+    // Psychoacoustic logarithmic frequency binning with fluid damping
+    const freqLen = freqData.length;
     for (let i = 0; i < VIZ_BAR_COUNT; i++) {
       const p = i / (VIZ_BAR_COUNT - 1);
-      const startBin = Math.floor(Math.pow(p, 2.0) * (binCount - 12));
-      const endBin = Math.max(startBin + 1, Math.floor(Math.pow((i + 1) / VIZ_BAR_COUNT, 2.0) * (binCount - 4)));
+      const startBin = Math.floor(Math.pow(p, 1.8) * (freqLen - 12));
+      const endBin = Math.max(startBin + 1, Math.floor(Math.pow((i + 1) / VIZ_BAR_COUNT, 1.8) * (freqLen - 4)));
       let sum = 0;
       let count = 0;
-      for (let b = startBin; b <= endBin && b < binCount; b++) {
+      for (let b = startBin; b <= endBin && b < freqLen; b++) {
         sum += freqData[b];
         count++;
       }
       const rawAvg = count > 0 ? sum / count : 0;
-      const boost = 1.0 + Math.pow(p, 1.2) * 1.6;
-      const target = Math.min(1.0, Math.max(0.04, (rawAvg / 255.0) * boost));
+      const boost = 1.0 + Math.pow(p, 1.1) * 1.3;
+      const target = Math.min(1.0, Math.max(0.06, (rawAvg / 255.0) * boost));
 
-      // Physics damping: snappy attack, smooth gravity decay
+      // Organic spring physics: fast responsive attack, smooth fluid decay
       if (target > vizSmoothed[i]) {
-        vizSmoothed[i] += (target - vizSmoothed[i]) * 0.42;
+        vizSmoothed[i] += (target - vizSmoothed[i]) * 0.38;
       } else {
-        vizSmoothed[i] -= (vizSmoothed[i] - target) * 0.12;
-      }
-
-      // Floating peak caps
-      if (vizSmoothed[i] > vizPeaks[i]) {
-        vizPeaks[i] = vizSmoothed[i];
-      } else {
-        vizPeaks[i] = Math.max(0, vizPeaks[i] - 0.015);
+        vizSmoothed[i] -= (vizSmoothed[i] - target) * 0.14;
       }
     }
 
     if (mode === 'bars') {
-      // Modern Studio Rounded EQ Bars with floating peak caps
-      const barSpacing = Math.max(2, logicalW / (VIZ_BAR_COUNT * 4.5));
+      // Modern Spotify / Apple Music style centered pill bars
+      const usableW = Math.min(logicalW * 0.92, 380);
+      const startX = (logicalW - usableW) / 2;
+      const barSpacing = Math.max(3, usableW / (VIZ_BAR_COUNT * 2.8));
       const totalSpacing = barSpacing * (VIZ_BAR_COUNT - 1);
-      const barWidth = Math.max(3, (logicalW - totalSpacing) / VIZ_BAR_COUNT);
-      const cornerRadius = Math.min(barWidth / 2, 4);
+      const barWidth = Math.max(3.5, (usableW - totalSpacing) / VIZ_BAR_COUNT);
+      const cornerRadius = barWidth / 2;
 
       for (let i = 0; i < VIZ_BAR_COUNT; i++) {
         const val = vizSmoothed[i];
-        const barH = Math.max(4, val * (logicalH - 8));
-        const x = i * (barWidth + barSpacing);
-        const y = logicalH - barH;
+        const barH = Math.max(6, val * (logicalH - 10));
+        const x = startX + i * (barWidth + barSpacing);
+        const y = (logicalH - barH) / 2;
 
-        const grad = ctx.createLinearGradient(0, logicalH, 0, y);
-        grad.addColorStop(0, accent + '40');
-        grad.addColorStop(0.6, accent);
-        grad.addColorStop(1, accent2);
-        ctx.fillStyle = grad;
-
+        ctx.fillStyle = `rgba(${accentRgb}, ${Math.min(0.95, 0.45 + val * 0.55)})`;
         ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(x, y, barWidth, barH, [cornerRadius, cornerRadius, 1, 1]);
+          ctx.roundRect(x, y, barWidth, barH, cornerRadius);
         } else {
           ctx.rect(x, y, barWidth, barH);
         }
         ctx.fill();
-
-        // Floating Peak Cap
-        const peakY = logicalH - Math.max(barH + 3, vizPeaks[i] * (logicalH - 8) + 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = accent2;
-        ctx.shadowBlur = 6;
-        ctx.fillRect(x, peakY, barWidth, 2);
-        ctx.shadowBlur = 0;
       }
     } else if (mode === 'radial') {
       // Symmetrical Horizon Spectrum
       const mid = logicalW / 2;
       const halfBars = Math.floor(VIZ_BAR_COUNT / 2);
-      const barW = Math.max(3, (mid / halfBars) - 2);
+      const barW = Math.max(3, (logicalW * 0.44 / halfBars) - 2.5);
 
       for (let i = 0; i < halfBars; i++) {
         const val = vizSmoothed[i * 2];
-        const barH = Math.max(4, val * (logicalH - 6));
-        const xOffset = i * (barW + 2);
+        const barH = Math.max(4, val * (logicalH - 8));
+        const xOffset = i * (barW + 2.5);
         const y = (logicalH - barH) / 2;
 
-        const grad = ctx.createLinearGradient(0, y, 0, y + barH);
-        grad.addColorStop(0, accent2);
-        grad.addColorStop(0.5, accent);
-        grad.addColorStop(1, accent2);
-        ctx.fillStyle = grad;
-
+        ctx.fillStyle = `rgba(${accentRgb}, ${0.5 + val * 0.5})`;
         ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(mid + xOffset, y, barW, barH, 3);
-          ctx.roundRect(mid - xOffset - barW, y, barW, barH, 3);
+          ctx.roundRect(mid + xOffset, y, barW, barH, barW / 2);
+          ctx.roundRect(mid - xOffset - barW, y, barW, barH, barW / 2);
         } else {
           ctx.rect(mid + xOffset, y, barW, barH);
           ctx.rect(mid - xOffset - barW, y, barW, barH);
@@ -3277,65 +3267,56 @@ function startVisualizer() {
     } else if (mode === 'minimal') {
       // Dynamic Bass Glow Ambient Aura
       let bass = 0;
-      for (let i = 0; i < 8; i++) bass += vizSmoothed[i];
-      bass = bass / 8;
-      const alpha = Math.min(0.85, bass * 0.95);
-      const grad = ctx.createRadialGradient(logicalW / 2, logicalH / 2, 4, logicalW / 2, logicalH / 2, logicalW * 0.45);
-      grad.addColorStop(0, accent + Math.round(alpha * 220).toString(16).padStart(2, '0'));
-      grad.addColorStop(0.7, accent2 + '18');
+      for (let i = 0; i < 6; i++) bass += vizSmoothed[i];
+      bass = bass / 6;
+      const alpha = Math.min(0.75, bass * 0.85);
+      const grad = ctx.createRadialGradient(logicalW / 2, logicalH / 2, 2, logicalW / 2, logicalH / 2, logicalW * 0.38);
+      grad.addColorStop(0, `rgba(${accentRgb}, ${alpha})`);
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, logicalW, logicalH);
     } else {
-      // Default: Fluid Neon Aurora Soundwave Curve
+      // Smooth symmetrical audio waveform
       ctx.beginPath();
-      const points = [];
+      const midY = logicalH / 2;
       const stepX = logicalW / (VIZ_BAR_COUNT - 1);
+      const points = [];
 
       for (let i = 0; i < VIZ_BAR_COUNT; i++) {
         const x = i * stepX;
         const val = vizSmoothed[i];
-        const y = logicalH - Math.max(6, val * (logicalH - 10));
-        points.push({ x, y });
+        // Window function to taper cleanly at left and right edges
+        const edgeWindow = Math.sin((i / (VIZ_BAR_COUNT - 1)) * Math.PI);
+        const amplitude = val * (logicalH * 0.44) * edgeWindow;
+        points.push({ x, yTop: midY - amplitude, yBottom: midY + amplitude });
       }
 
-      ctx.moveTo(0, logicalH);
-      ctx.lineTo(points[0].x, points[0].y);
-
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].yTop);
       for (let i = 0; i < points.length - 1; i++) {
         const p0 = points[i];
         const p1 = points[i + 1];
         const midX = (p0.x + p1.x) / 2;
-        const midY = (p0.y + p1.y) / 2;
-        ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+        const myTop = (p0.yTop + p1.yTop) / 2;
+        ctx.quadraticCurveTo(p0.x, p0.yTop, midX, myTop);
       }
-      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-      ctx.lineTo(logicalW, logicalH);
+      for (let i = points.length - 1; i > 0; i--) {
+        const p0 = points[i];
+        const p1 = points[i - 1];
+        const midX = (p0.x + p1.x) / 2;
+        const myBot = (p0.yBottom + p1.yBottom) / 2;
+        ctx.quadraticCurveTo(p0.x, p0.yBottom, midX, myBot);
+      }
       ctx.closePath();
 
-      // Ambient liquid glow fill
-      const fillGrad = ctx.createLinearGradient(0, 0, 0, logicalH);
-      fillGrad.addColorStop(0, accent + '70');
-      fillGrad.addColorStop(0.5, accent2 + '30');
-      fillGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = fillGrad;
+      ctx.fillStyle = `rgba(${accentRgb}, 0.22)`;
       ctx.fill();
 
-      // Top glowing neon ribbon stroke
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 0; i < points.length - 1; i++) {
-        const p0 = points[i];
-        const p1 = points[i + 1];
-        const midX = (p0.x + p1.x) / 2;
-        const midY = (p0.y + p1.y) / 2;
-        ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
-      }
-      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-      ctx.lineWidth = 2.8;
-      ctx.strokeStyle = accent2;
-      ctx.shadowColor = accent2;
-      ctx.shadowBlur = 12;
+      // Centerline accent
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = accent;
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = 8;
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
@@ -4126,6 +4107,8 @@ function openSidePanel() {
   document.body.classList.add('side-panel-open');
   if (window.innerWidth <= 900) {
     $('#side-panel-backdrop')?.classList.add('show');
+  } else {
+    $('#side-panel-backdrop')?.classList.remove('show');
   }
 }
 

@@ -31,15 +31,14 @@
 
 <!-- App shell -->
 <div class="app">
+  <!-- Native Audio Stream with iOS background & lock-screen persistence -->
+  <audio id="audio" preload="auto" playsinline webkit-playsinline></audio>
 
   <!-- Desktop Sidebar -->
   <aside class="sidebar glass" id="sidebar" aria-label="Sidebar navigation">
     <div class="brand">
       <div class="brand-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="9"/>
-          <circle cx="12" cy="12" r="3" fill="currentColor"/>
-        </svg>
+        <img src="assets/icons/neon-h-music-wave-icon.png" alt="Harxora Vibez" class="brand-logo-img">
       </div>
       <div class="brand-text">
         <h1>Harxora Vibez</h1>
@@ -98,7 +97,10 @@
     <button class="icon-btn" id="menu-btn" aria-label="Open navigation menu">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
-    <div class="topbar-title">Harxora Vibez</div>
+    <div class="topbar-brand">
+      <img src="assets/icons/neon-h-music-wave-icon.png" alt="Harxora Vibez Logo" class="topbar-logo-img">
+      <span class="topbar-title">Harxora Vibez</span>
+    </div>
     <div class="topbar-actions">
       <button class="icon-btn" id="pwa-install-topbar-btn" title="Install App" style="display:none;" aria-label="Install App">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4"/></svg>
@@ -983,35 +985,42 @@
           </div>
 
           <div class="full-extras">
-            <div class="vol-wrap">
-              <button class="icon-btn" id="mute-btn" title="Mute (M)" aria-label="Mute or unmute"></button>
-              <input type="range" id="volume" min="0" max="100" value="80" class="seek small" aria-label="Volume slider">
+            <!-- Row 1: Volume Slider Strip -->
+            <div class="vol-strip" id="vol-strip">
+              <button class="icon-btn vol-btn" id="mute-btn" title="Mute (M)" aria-label="Mute or unmute">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+              </button>
+              <input type="range" id="volume" min="0" max="100" value="80" class="seek small vol-slider" aria-label="Volume slider">
             </div>
-            <div class="extra-buttons">
-              <button class="icon-btn" id="like-btn" title="Like (L)" aria-label="Toggle favorite">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+
+            <!-- Row 2: Perfectly Ordered Actions Toolbar -->
+            <div class="extra-actions-bar" id="extra-actions-bar">
+              <button class="icon-btn extra-btn" id="like-btn" title="Favorite (L)" aria-label="Toggle favorite">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
               </button>
-              <select id="speed-select" class="glass select small" aria-label="Playback speed">
-                <option value="0.5">0.5x</option>
-                <option value="0.75">0.75x</option>
-                <option value="1" selected>1x</option>
-                <option value="1.25">1.25x</option>
-                <option value="1.5">1.5x</option>
-                <option value="1.75">1.75x</option>
-                <option value="2">2x</option>
-              </select>
-              <button class="icon-btn" id="lyrics-btn" title="Lyrics" aria-label="Toggle lyrics">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+              <button class="icon-btn extra-btn" id="addqueue-btn" title="Add to playlist" aria-label="Add to playlist">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h13M4 12h13M4 18h9M19 15v6M16 18h6"/></svg>
               </button>
-              <button class="icon-btn" id="full-queue-bottom-btn" title="Queue" aria-label="Toggle queue">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h10"/></svg>
+              <div class="speed-pill-wrap" title="Playback speed">
+                <select id="speed-select" class="speed-select" aria-label="Playback speed">
+                  <option value="0.5">0.5×</option>
+                  <option value="0.75">0.75×</option>
+                  <option value="1" selected>1.0×</option>
+                  <option value="1.25">1.25×</option>
+                  <option value="1.5">1.5×</option>
+                  <option value="1.75">1.75×</option>
+                  <option value="2">2.0×</option>
+                </select>
+              </div>
+              <button class="icon-btn extra-btn" id="lyrics-btn" title="Lyrics" aria-label="Toggle lyrics">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+              </button>
+              <button class="icon-btn extra-btn" id="full-queue-bottom-btn" title="Queue" aria-label="Toggle queue">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h10"/></svg>
                 <span class="full-queue-badge" id="full-queue-count-badge">0</span>
               </button>
-              <button class="icon-btn" id="addqueue-btn" title="Add to playlist" aria-label="Add to playlist">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h13M4 12h13M4 18h9M19 15v6M16 18h6"/></svg>
-              </button>
-              <button class="icon-btn" id="fullscreen-btn" title="Fullscreen (F)" aria-label="Toggle fullscreen">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg>
+              <button class="icon-btn extra-btn" id="fullscreen-btn" title="Fullscreen (F)" aria-label="Toggle fullscreen">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg>
               </button>
             </div>
           </div>
